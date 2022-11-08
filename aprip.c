@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <string.h>
 
+#define VER "1.0.1"
 FILE *bin;
 FILE *mem_dump_1;
 FILE *mem_dump_2;
@@ -107,6 +108,12 @@ void bin_patch (const char **argv)
     */
     fseek(bin, 0, SEEK_END);
     bin_size = ftell(bin);
+    if(bin_size > 786432000) // 750MB max, no PSX software comes even close to such a size
+    {
+        printf("Error: The BIN file: %s exceeds the maximum filesize of 750MB in bin patch mode\n", argv[2]);
+        fclose(bin);
+        return;
+    }
     fseek(bin, 0, SEEK_SET);
     buf = (unsigned char *)malloc(bin_size * sizeof(unsigned char)); // Read entire BIN to memory for performance gain, I mean it's 2022 who doesn't have a free ~700MBs of RAM?!
     unsigned char sectors[0x1000];
@@ -222,9 +229,11 @@ void gameshark_gen(const char **argv)
 
     if(mem_dump_1_size != valid_mem_dump_size)
     {
-        printf("Error: the original mem dump file: %s is not the expected size", argv[1]);
+        printf("Error: the original mem dump file: %s is not the expected size\n", argv[2]);
         fclose(mem_dump_1);
         free(buf);
+        if(mem_dump_1_size == 8388608)
+            printf("Do you have the 'Enable 8MB RAM' option enabled? Uncheck that option if so and make a new RAM dump\n");
         return;
     }
 
@@ -369,7 +378,9 @@ void sharkconv(const char **argv)
 
         if(mem_dump_1_size != valid_mem_dump_size)
         {
-            printf("Error: the old game ver mem dump file: %s is not the expected size", argv[3]);
+            printf("Error: the old game ver mem dump file: %s is not the expected size\n", argv[3]);
+            if(mem_dump_1_size == 8388608)
+                printf("Do you have the 'Enable 8MB RAM' option enabled? Uncheck that option if so and make a new RAM dump\n");
             fclose(mem_dump_1);
             free(mem_dump_1_buf);
             return;
@@ -390,8 +401,10 @@ void sharkconv(const char **argv)
 
         if(mem_dump_2_size != valid_mem_dump_size)
         {
-            printf("Error: the new game ver mem dump file: %s is not the expected size", argv[4]);
-             fclose(mem_dump_1);
+            printf("Error: the new game ver mem dump file: %s is not the expected size\n", argv[4]);
+            if(mem_dump_2_size == 8388608)
+                printf("Do you have the 'Enable 8MB RAM' option enabled? Uncheck that option if so and make a new RAM dump\n");
+            fclose(mem_dump_1);
             fclose(mem_dump_2);
             free(mem_dump_1_buf);
             free(mem_dump_2_buf);
@@ -453,7 +466,7 @@ int main (int argc, const char * argv[])
 {
     current_fpos = 0; // Simulate position in file stream via an unsigned char array
     valid_mem_dump_size = 0x200000; // The exact file size generated when dumping RAM in the DuckStation emulator.
-    printf("PSX Anti-Piracy Ripper (APrip) v1.0\nBy Alex Free (C)2022\n----------------------------------------\nRest In Pieces PSX Anti-Piracy Detection\n----------------------------------------\n");
+    printf("PSX Anti-Piracy Ripper (APrip) v%s\nBy Alex Free (C)2022\n----------------------------------------\nRest In Pieces PSX Anti-Piracy Detection\n----------------------------------------\n", VER);
 
    if(argc == 3)
     {
