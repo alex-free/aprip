@@ -158,11 +158,12 @@
 <p>By Alex Free</p>
 <p>APrip is a portable open source tool capable of bypassing/patching-out the ‘standardized’ additional anti-piracy copy protection found in some later PSX games. APrip can:</p>
 <ul>
-<li><p><a href="#patching-the-cd-image">Patch The CD Image</a> of a game to remove the additional anti-piracy copy protection.</p></li>
+<li><p><a href="#patching-the-cd-image">Patch The CD Image</a> of <strong>a PSX game directly</strong> to remove the additional anti-piracy copy protection.</p></li>
 <li><p><a href="#generating-gameshark-codes">Generate</a> valid GameShark code(s) to remove the additional anti-piracy copy protection.</p></li>
 <li><p><a href="#converting-an-existing-gameshark-code">Convert</a> an existing GameShark code which bypasses or removes the additional anti-piracy copy protection for one version of a game to a different version (i.e. converts a Rev 0 code to a Rev 1 or Demo version compatible code, or for a different regional release of the same game entirely).</p></li>
 </ul>
-<p>APrip can detect and patch both version 1 and version 2 of the ‘standardized’ additional anti-piracy copy protection which I dub APv1 and APv2. APrip’s patches will enable play of games using a non-stealth modchip or by a modern PSX backup/import loader such as <a href="https://alex-free.github.io/tonyhax-international">Tonyhax International</a> or <a href="https://www.psx-place.com/resources/stealth-unlocker.1272">Stealth Unlocker ROM</a>.</p>
+<p>APrip can detect and patch both version 1 and version 2 of the ‘standardized’ additional anti-piracy copy protection which I dub APv1 and APv2.</p>
+<p>APrip’s patches will enable play of games <strong>using a non-stealth modchip</strong> or by <strong>a modern PSX backup/import loader that corrects TOC data</strong> such as <a href="https://alex-free.github.io/tonyhax-international">Tonyhax International</a> or <a href="https://www.psx-place.com/resources/stealth-unlocker.1272">Stealth Unlocker ROM</a>.</p>
 <p>APv1 was first seen in the Japan only game <a href="http://redump.org/disc/1552/">PoPoRogue</a>. APv1 checks if there is a modchip that is constantly spamming the SCEX string to the CD-ROM drive controller. It can not detect <a href="https://gamefaqs.gamespot.com/ps/916392-playstation/faqs/4708">swap tricks</a> or ‘stealth’ modchips which are only active when the CD-ROM drive lid is closed or at power on/boot. <strong>Tonyhax International and Stealth Unlocker ROM do not actually require any patching for these kinds of games.</strong></p>
 <p>APv2 was first seen probably in <a href="http://redump.org/disc/1598/">Dino Crisis</a>, this time in both the Japanese and American releases. APv2 checks if there is a modchip that is constantly spamming the SCEX string to the CD-ROM drive controller <strong>and for swap tricks</strong>. The swap trick detection code is actually so effective that it ended up doubling as detection for the no $ psx unlock backdoor commands (first discovered in 2013). <strong>Tonyhax International and Stealth Unlocker ROM require game specific patches for any game which contains APv2.</strong></p>
 <p>Most games which contain additional anti-piracy copy protection are using either the ‘standardized APv1’ or ‘standard APv2’ variant. If one version of a game is patchable (i.e. Rev 0/the first version of the game), every other version would also be patchable by APrip (i.e. Greatest Hits/Rev 1, Demo versions, different regional releases).</p>
@@ -175,12 +176,25 @@
 <li><a href="https://alex-free.github.io/tonyhax-international">Tonyhax International</a></li>
 </ul>
 <h2 id="downloads">Downloads</h2>
+<h3 id="version-1.0.2-11282022">Version 1.0.2 (11/28/2022)</h3>
+<ul>
+<li><a href="https://github.com/alex-free/aprip/releases/download/v1.0.2/aprip-1.0.2-windows_x86.zip">aprip-1.0.2-windows-x86</a> <em>For Windows 95 OSR 2.5 Or Newer (32-bit Windows)</em></li>
+<li><a href="https://github.com/alex-free/aprip/releases/download/v1.0.2/aprip-1.0.2-windows_x86_64.zip">aprip-1.0.2-windows-x86_64</a> <em>For 64-bit Windows</em></li>
+<li><a href="https://github.com/alex-free/aprip/releases/download/v1.0.2/aprip-1.0.2-linux_x86_static.zip">aprip-1.0.2-linux-x86</a> <em>For x86 Linux Distros</em></li>
+<li><a href="https://github.com/alex-free/aprip/releases/download/v1.0.2/aprip-1.0.2-linux_x86_64_static.zip">aprip-1.0.2-linux-x86_64</a> <em>For x86_64 Linux Distros</em></li>
+<li><a href="https://github.com/alex-free/aprip/archive/refs/tags/v1.0.2.zip">aprip-1.0.2-source</a></li>
+</ul>
+<p>Changes:</p>
+<ul>
+<li>Cleaned up <code>cd-command-logger.sh</code>/<code>cd-command-logger.bat</code> and <code>ap-type-checker.sh</code>/<code>ap-type-checker.bat</code> scripts. The Windows <code>find</code> command is now executed via it’s full filepath (in system32) to ensure the correct find command is being executed. It was possible in v1.0.1 that some non-standard <code>%PATH%</code> configuration could override the Windows default <code>find</code> command, breaking the <code>.bat</code> scripts.</li>
+<li>Small performance increase (start searching at sector 19 instead of 0) for the bin-patcher mode has been applied.</li>
+</ul>
 <h3 id="version-1.0.1-1182022">Version 1.0.1 (11/8/2022)</h3>
 <ul>
 <li><a href="https://github.com/alex-free/aprip/releases/download/v1.0.1/aprip-1.0.1-windows_x86.zip">aprip-1.0.1-windows-x86</a> <em>For Windows 95 OSR 2.5 Or Newer (32-bit Windows)</em></li>
 <li><a href="https://github.com/alex-free/aprip/releases/download/v1.0.1/aprip-1.0.1-windows_x86_64.zip">aprip-1.0.1-windows-x86_64</a> <em>For 64-bit Windows</em></li>
 <li><a href="https://github.com/alex-free/aprip/releases/download/v1.0.1/aprip-1.0.1-linux_x86_static.zip">aprip-1.0.1-linux-x86</a> <em>For x86 Linux Distros</em></li>
-<li><a href="https://github.com/alex-free/aprip/releases/download/v1.0.1/aprip-1.0-linux_x86_64_static.zip">aprip-1.0.1-linux-x86_64</a> <em>For x86_64 Linux Distros</em></li>
+<li><a href="https://github.com/alex-free/aprip/releases/download/v1.0.1/aprip-1.0.1-linux_x86_64_static.zip">aprip-1.0.1-linux-x86_64</a> <em>For x86_64 Linux Distros</em></li>
 <li><a href="https://github.com/alex-free/aprip/archive/refs/tags/v1.0.1.zip">aprip-1.0.1-source</a></li>
 </ul>
 <p>Changes:</p>

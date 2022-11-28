@@ -29,7 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <string.h>
 
-#define VER "1.0.1"
+#define VER "1.0.2"
 FILE *bin;
 FILE *mem_dump_1;
 FILE *mem_dump_2;
@@ -108,15 +108,16 @@ void bin_patch (const char **argv)
     */
     fseek(bin, 0, SEEK_END);
     bin_size = ftell(bin);
-    if(bin_size > 786432000) // 750MB max, no PSX software comes even close to such a size
+
+    if(bin_size > 0x2EE00000) // 750MB max, no PSX software comes even close to such a size
     {
         printf("Error: The BIN file: %s exceeds the maximum filesize of 750MB in bin patch mode\n", argv[2]);
         fclose(bin);
         return;
     }
+    
     fseek(bin, 0, SEEK_SET);
     buf = (unsigned char *)malloc(bin_size * sizeof(unsigned char)); // Read entire BIN to memory for performance gain, I mean it's 2022 who doesn't have a free ~700MBs of RAM?!
-    unsigned char sectors[0x1000];
     fread(buf, bin_size, 1, bin);
     printf("Successfully loaded BIN file: %s (%d bytes in memory)\n", argv[2], bin_size);
     max_size = bin_size;
@@ -464,13 +465,13 @@ void sharkconv(const char **argv)
 
 int main (int argc, const char * argv[]) 
 {
-    current_fpos = 0; // Simulate position in file stream via an unsigned char array
     valid_mem_dump_size = 0x200000; // The exact file size generated when dumping RAM in the DuckStation emulator.
     printf("PSX Anti-Piracy Ripper (APrip) v%s\nBy Alex Free (C)2022\n----------------------------------------\nRest In Pieces PSX Anti-Piracy Detection\n----------------------------------------\n", VER);
 
    if(argc == 3)
     {
         if((strcmp("-b", argv[1])) == 0) {
+        current_fpos = (19 * 0x930); // Start 'fpos' at sector 19 for a small speed increase. https://problemkaputt.de/psx-spx.htm#cdromfileofficialsonyfileformats
         printf("MODE: BIN patcher\n");
             if((bin = fopen(argv[2], "rb+")) != NULL)
             {
@@ -480,6 +481,7 @@ int main (int argc, const char * argv[])
         	   return(1);
             }
         } else if((strcmp("-gs", argv[1])) == 0) {
+            current_fpos = 0; // Start 'fpos' at 0
             printf("MODE: GameShark anti-piracy bypass code creator\n");
             if((mem_dump_1 = fopen(argv[2], "rb")) != NULL)
             {
@@ -493,6 +495,7 @@ int main (int argc, const char * argv[])
             return(1);
         }
     } else if (argc == 5) {
+        current_fpos = 0; // Start 'fpos' at 0
         printf("MODE: GameShark code converter\n");
         sharkconv(argv);
     } else {
