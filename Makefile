@@ -24,7 +24,7 @@ windows-x86_64:
 linux-release:
 	rm -rf aprip-$(VER)-$(PLATFORM) aprip-$(VER)-$(PLATFORM).zip
 	mkdir aprip-$(VER)-$(PLATFORM)
-	cp -rv aprip images readme.html readme.md cd-command-logger.sh ap-type-checker.sh license.txt aprip-$(VER)-$(PLATFORM)
+	cp -rv aprip images readme.md cd-command-logger.sh ap-type-checker.sh license.txt aprip-$(VER)-$(PLATFORM)
 	chmod -R 777 aprip-$(VER)-$(PLATFORM)
 	zip -r aprip-$(VER)-$(PLATFORM).zip aprip-$(VER)-$(PLATFORM)
 	rm -rf aprip-$(VER)-$(PLATFORM)
@@ -32,7 +32,7 @@ linux-release:
 windows-release:
 	rm -rf aprip-$(VER)-$(PLATFORM) aprip-$(VER)-$(PLATFORM).zip
 	mkdir aprip-$(VER)-$(PLATFORM)
-	cp -rv aprip.exe images readme.html readme.md cd-command-logger.bat ap-type-checker.bat license.txt aprip-$(VER)-$(PLATFORM)
+	cp -rv aprip.exe images readme.md cd-command-logger.bat ap-type-checker.bat license.txt aprip-$(VER)-$(PLATFORM)
 	chmod -R 777 aprip-$(VER)-$(PLATFORM)
 	zip -r aprip-$(VER)-$(PLATFORM).zip aprip-$(VER)-$(PLATFORM)
 	rm -rf aprip-$(VER)-$(PLATFORM)
