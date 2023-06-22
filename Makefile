@@ -1,7 +1,7 @@
 # APrip GNUMakefile by Alex Free
 CC=gcc
 CFLAGS=-Wall -Werror -Ofast
-VER=1.0.2
+VER=1.0.3
 
 aprip: clean
 	$(CC) $(CFLAGS) aprip.c -o aprip

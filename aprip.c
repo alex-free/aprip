@@ -1,6 +1,6 @@
 /*
 BSD 3-Clause License
-Copyright (c) 2022, Alex Free
+Copyright (c) 2022-2023, Alex Free
 All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -29,7 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <string.h>
 
-#define VER "1.0.2"
+#define VER "1.0.3"
 FILE *bin;
 FILE *mem_dump_1;
 FILE *mem_dump_2;
@@ -62,6 +62,19 @@ unsigned char pattern[16];
 const unsigned char play = 0x03;
 const unsigned char pause = 0x09;
 const unsigned char sync = 0x00;
+
+
+const unsigned char libcrypt_2_anti_pro_action_replay[] = {
+    0x80, 0xE1, 0x02, 0x3C, 0x00, 0x38, 0x82, 0x40
+};
+
+const unsigned char libcrypt_2_anti_mod_chip[] = {
+    0x08, 0x00, 0x20, 0x14, 0x02, 0x00, 0xE7, 0x30, 0x06, 0x00, 0xE0, 0x10,  0xAD, 0xFF, 0x84, 0x20, 0x04, 0x00, 0x80, 0x14, 0x00, 0x00, 0x00, 0x00
+};
+
+const unsigned char libcrypt_2_magic_word[] = {
+    0x25, 0x30, 0x86, 0x00    
+};
 
 const unsigned char anti_piracy_v1[] = { // The very first anti-piracy code. Found in PopoRogue, Ape Escape, etc. Does only 3 SCEX check for dumb non-stealth modchips.
     0x01, 0x00, 0x01, 0x03, // GetStat
@@ -96,6 +109,224 @@ const unsigned char anti_piracy_v2[] = { // This was first seen in Dino Crisis? 
 bool matched_anti_piracy_v1;
 bool matched_anti_piracy_v2;
 bool last_sector;
+
+bool matched_libcrypt_2_anti_pro_action_replay;
+bool matched_libcrypt_2_anti_mod_chip;
+bool matched_libcrypt_2_magic_word;
+bool matched_libcrypt_2;
+
+void bin_patch_libcrypt(const char **argv)
+{
+    last_sector = 0;
+
+    /*
+        The AP table could possibly start on the end of a sector and end at the beginning of the next sector. Each RAW sector is 0x930 bytes. The first 0x18 bytes are to be ignored as they are just header data. The next 0x800 bytes contains actual data we want to scan through.
+        Start at 0. Skip to 0x18. Read the next 0x800 bytes. Skip to a total of 0x930 bytes (one whole raw sector). Skip 0x18 bytes again and then read the next 0x800 bytes. We now have 2 sectors worth of straight up data in a buffer of 0x1000 bytes
+        Run search functions on the 0x1000 byte sized buffer.
+    */
+    fseek(bin, 0, SEEK_END);
+    bin_size = ftell(bin);
+
+    if(bin_size > 0x2EE00000) // 750MB max, no PSX software comes even close to such a size
+    {
+        printf("Error: The BIN file: %s exceeds the maximum filesize of 750MB in bin patch mode\n", argv[3]);
+        fclose(bin);
+        return;
+    }
+
+    unsigned int magic_word = strtoul(argv[2], NULL, 16);
+    printf("Magic Word: %08X\n", magic_word);
+    unsigned char *bytes;
+    bytes=(unsigned char *)&magic_word;
+    /*
+    printf("Bytes 0: %02X\n", bytes[0]);
+    printf("Bytes 1: %02X\n", bytes[1]);
+    printf("Bytes 2: %02X\n", bytes[2]);
+    printf("Bytes 3: %02X\n", bytes[3]);
+    */
+
+    fseek(bin, 0, SEEK_SET);
+    buf = (unsigned char *)malloc(bin_size * sizeof(unsigned char)); // Read entire BIN to memory for performance gain, I mean it's 2022 who doesn't have a free ~700MBs of RAM?!
+    fread(buf, bin_size, 1, bin);
+    printf("Successfully loaded BIN file: %s (%d bytes in memory)\n", argv[3], bin_size);
+    max_size = bin_size;
+    number_of_sectors = (bin_size / 2352);
+    printf("Scanning %d sectors, please wait...\n", number_of_sectors);
+
+    while(1)
+    {
+        if(current_fpos > max_size)
+            break; // even number of sectors, done reading the file.
+
+        if((current_fpos + 0x930) == max_size) // odd number of sectors
+            last_sector = 1; // This function is reading 2 sectors at a time, so if there is an odd number of sectors we have to change the behavior to only search the last sector. Explicitly break loop when this is set.
+
+        for(int i=0; i < 0x800; i++)
+        {
+            sectors[i] = buf[current_fpos + i + 0x18]; // skip 0x18 header info per sector
+        }
+
+        if(!last_sector)
+        {
+            for(int i=0; i < 0x800; i++)
+            {
+                sectors[i + 0x800] = buf[current_fpos + i + 0x18 + 0x930]; // skip 0x18 header info then skip exactly 1 sector. Read the next 0x800 bytes. We now have an array's worth of data from 2 sectors which excludes EDC/Header data at the beggining and end of each.
+            }
+            search_size = 0x1000;
+        } else {
+            search_size = 0x800;
+        }
+
+        for(int s = 0; s < search_size; s++)
+        {
+            matched_anti_piracy_v1 = true;
+            for(int i=0; i < 40; i++)
+            {                
+                if(anti_piracy_v1[i] != sectors[s + i])
+                {
+                    if(i != 3 && i != 7 && i != 11 && i != 15 && i != 19 && i != 23 && i != 27 && i != 31 && i != 35 && i != 39) // These bytes could change, they can be 03 or 05 depending on the AP code in the game but the table itself remains consistent besides the value of every 4th byte and the commands are still obvious via this pattern
+                        matched_anti_piracy_v1 = false; 
+                }
+            }
+
+            if(matched_anti_piracy_v1) 
+            {            
+                printf("Got anti-piracy v1 table match\n");
+                sectors[s + 20] = sync; // Replace SubFunq X's bytes with '00' bytes
+                sectors[s + 21] = sync;
+                sectors[s + 22] = sync;
+                sectors[s + 23] = sync;
+
+                sectors[s + 32] = sync; /// Replace SubFunq Y's bytes with '00' bytes
+                sectors[s + 33] = sync;
+                sectors[s + 34] = sync;
+                sectors[s + 35] = sync;
+            }
+
+            matched_anti_piracy_v2 = true;
+            for(int i=0; i < 52; i++)
+            {                
+    
+                if(anti_piracy_v2[i] != sectors[s + i])
+                {
+                    if(i != 3 && i != 7 && i != 11 && i != 15 && i != 19 && i != 23 && i != 27 && i != 31 && i != 35 && i != 39 && i != 43 && i != 47 && i != 51) // These bytes could change, they can be 03 or 05 depending on the AP code in the game but the table itself remains consistent besides the value of every 4th byte and the commands are still obvious via this pattern
+                    {
+                        matched_anti_piracy_v2 = false;
+                    }
+                }      
+            }
+
+            if(matched_anti_piracy_v2) 
+            {
+                printf("Got anti-piracy v2 table match\n");
+                sectors[s + 36] = pause; // Replace SubFunq X's first byte with the Pause command's first byte
+                sectors[s + 40] = play; // Replace SubFunq Y's first byte with the Play command's first byte
+                sectors[s + 48] = sync; // Replace ReadTOC's first byte with the first byte of the sync command. This seems to trigger the VC0 CDROM Controller BIOS Firmware behavior on all consoles. The VC0 CDROM Controller BIOS firmware does not have the ReadTOC command, it is found in the wild in early SCPH-3000 Japanese consoles and in all SCPH-1000 consoles.
+			}
+
+            matched_libcrypt_2_anti_pro_action_replay = true;
+            for(int i=0; i < 8; i++)
+            {                
+                if(libcrypt_2_anti_pro_action_replay[i] != sectors[s + i])
+                    matched_libcrypt_2_anti_pro_action_replay = false;
+            }
+
+            if(matched_libcrypt_2_anti_pro_action_replay)
+            {
+                printf("Detected LibCrypt 2 Anti-Pro Action Replay\n");
+                sectors[s + 0] = 0x00;
+                sectors[s + 1] = 0x00;
+                sectors[s + 2] = 0x00;
+                sectors[s + 3] = 0x00;
+                sectors[s + 4] = 0x00;
+                sectors[s + 5] = 0x00;
+                sectors[s + 6] = 0x00;
+                sectors[s + 7] = 0x00;
+            }
+
+            matched_libcrypt_2_anti_mod_chip = true;
+            for(int i=0; i < 24; i++)
+            {                
+                if(libcrypt_2_anti_mod_chip[i] != sectors[s + i])
+                    matched_libcrypt_2_anti_mod_chip = false;
+            }
+
+            if(matched_libcrypt_2_anti_mod_chip)
+            {
+                printf("Detected LibCrypt 2 Anti-Mod-Chip\n");
+                // Part 1
+                sectors[s + 0] = 0x00;
+                sectors[s + 1] = 0x00;
+                sectors[s + 2] = 0x00;
+                sectors[s + 3] = 0x00;
+                // Part 2
+                sectors[s + 4] = 0x02;
+                sectors[s + 5] = 0x00;
+                sectors[s + 6] = 0xE7;
+                sectors[s + 7] = 0x30;
+                // Part 3
+                sectors[s + 8] = 0x00;
+                sectors[s + 9] = 0x00;
+                sectors[s + 10] = 0x00;
+                sectors[s + 11] = 0x00;
+                // Part 4
+                sectors[s + 12] = 0xAD;
+                sectors[s + 13] = 0xFF;
+                sectors[s + 14] = 0x84;
+                sectors[s + 15] = 0x20;
+                // Part 5
+                sectors[s + 16] = 0x00;
+                sectors[s + 17] = 0x00;
+                sectors[s + 18] = 0x00;
+                sectors[s + 19] = 0x00;
+                // Part 6
+                sectors[s + 20] = 0x00;
+                sectors[s + 21] = 0x00;
+                sectors[s + 22] = 0x00;
+                sectors[s + 23] = 0x00;
+            }
+
+            matched_libcrypt_2_magic_word = true;
+            for(int i=0; i < 4; i++)
+            {                
+                if(libcrypt_2_magic_word[i] != sectors[s + i])
+                    matched_libcrypt_2_magic_word = false;
+            }
+
+            if(matched_libcrypt_2_magic_word)
+            {
+                printf("Detected LibCrypt 2 Magic Word\n");
+                sectors[s + 0] = bytes[1];
+                sectors[s + 1] = bytes[0];
+
+                sectors[s + 2] = 0xC6;
+                sectors[s + 3] = 0x34;
+                		// 6C 3A C6 34
+            }
+        }
+		
+        for(int i=0; i < 0x800; i++)
+        {
+            buf[current_fpos + i + 0x18] = sectors[i]; // skip 0x18 header info per sector
+        }
+
+        if(!last_sector)
+        {
+            for(int i=0; i < 0x800; i++)
+            {
+                buf[current_fpos + i + 0x18 + 0x930] = sectors[0x800 + i]; // skip 0x18 header info then skip exactly 1 sector. Read the next 0x800 bytes. We now have an array's worth of data from 2 sectors which excludes EDC/Header data at the beginning and end of each.
+            }
+        } else {
+            break; // That was the last sector
+        }			
+        current_fpos = (current_fpos + 0x930); // Advance one sector.
+    }
+
+    fseek(bin, 0, SEEK_SET);
+	fwrite(buf, bin_size, 1, bin);
+    fclose(bin);
+    free(buf);
+}
 
 void bin_patch (const char **argv)
 {
@@ -160,19 +391,6 @@ void bin_patch (const char **argv)
                 }
             }
 
-            matched_anti_piracy_v2 = true;
-            for(int i=0; i < 52; i++)
-            {                
-    
-                if(anti_piracy_v2[i] != sectors[s + i])
-                {
-                    if(i != 3 && i != 7 && i != 11 && i != 15 && i != 19 && i != 23 && i != 27 && i != 31 && i != 35 && i != 39 && i != 43 && i != 47 && i != 51) // These bytes could change, they can be 03 or 05 depending on the AP code in the game but the table itself remains consistent besides the value of every 4th byte and the commands are still obvious via this pattern
-                    {
-                        matched_anti_piracy_v2 = false;
-                    }
-                }      
-            }
-
             if(matched_anti_piracy_v1) 
             {            
                 printf("Got anti-piracy v1 table match\n");
@@ -185,6 +403,19 @@ void bin_patch (const char **argv)
                 sectors[s + 33] = sync;
                 sectors[s + 34] = sync;
                 sectors[s + 35] = sync;
+            }
+
+            matched_anti_piracy_v2 = true;
+            for(int i=0; i < 52; i++)
+            {                
+    
+                if(anti_piracy_v2[i] != sectors[s + i])
+                {
+                    if(i != 3 && i != 7 && i != 11 && i != 15 && i != 19 && i != 23 && i != 27 && i != 31 && i != 35 && i != 39 && i != 43 && i != 47 && i != 51) // These bytes could change, they can be 03 or 05 depending on the AP code in the game but the table itself remains consistent besides the value of every 4th byte and the commands are still obvious via this pattern
+                    {
+                        matched_anti_piracy_v2 = false;
+                    }
+                }      
             }
 
             if(matched_anti_piracy_v2) 
@@ -466,7 +697,7 @@ void sharkconv(const char **argv)
 int main (int argc, const char * argv[]) 
 {
     valid_mem_dump_size = 0x200000; // The exact file size generated when dumping RAM in the DuckStation emulator.
-    printf("PSX Anti-Piracy Ripper (APrip) v%s\nBy Alex Free (C)2022\n----------------------------------------\nRest In Pieces PSX Anti-Piracy Detection\n----------------------------------------\n", VER);
+    printf("PSX Anti-Piracy Ripper (APrip) v%s\nBy Alex Free (C)2022-2023\n----------------------------------------\nRest In Pieces PSX Anti-Piracy Detection\n----------------------------------------\n", VER);
 
    if(argc == 3)
     {
@@ -494,12 +725,24 @@ int main (int argc, const char * argv[])
             printf("Error: The first argument should be either -gs or -b if you want to use a 2 argument function\n");
             return(1);
         }
+    } else if (argc == 4) {
+        if((strcmp("-b", argv[1])) == 0) {
+        current_fpos = (19 * 0x930); // Start 'fpos' at sector 19 for a small speed increase. https://problemkaputt.de/psx-spx.htm#cdromfileofficialsonyfileformats
+        printf("MODE: BIN patcher (LibCrypt 2)\n");
+            if((bin = fopen(argv[3], "rb+")) != NULL)
+            {
+                bin_patch_libcrypt(argv);
+            } else {
+                printf("Error: Cannot open the BIN file: %s\n", argv[3]);
+        	   return(1);
+            }
+        }
     } else if (argc == 5) {
         current_fpos = 0; // Start 'fpos' at 0
         printf("MODE: GameShark code converter\n");
         sharkconv(argv);
     } else {
-        printf("Error: Incorrect number of arguments\nUsage:\n\naprip -b <.bin file>\n(Patch BIN file directly)\n\naprip -gs <unpatched game duckstation mem dump>\n(Create GameShark anti-piracy bypass code)\n\naprip <old game ver code address (80XXXXXX or D0XXXXXX)> <old game ver code 16-bit write or compare value> <unpatched old game ver duckstation memory dump> <unpatched new game ver duckstation memory dump>\n(Convert an exisiting GameShark code from one revision/version to another of the same game)\n\n");
+        printf("Error: Incorrect number of arguments\nUsage:\n\naprip -b <.bin file>\n(Patch BIN file directly)\n\naprip -b <magic word> <.bin file>\n(Patch BIN file containing LibCrypt 2 protection directly)\n\naprip -gs <unpatched game Duckstation mem dump>\n(Create GameShark anti-piracy bypass code)\n\naprip <old game ver code address (80XXXXXX or D0XXXXXX)> <old game ver code 16-bit write or compare value> <unpatched old game ver Duckstation memory dump> <unpatched new game ver Duckstation memory dump>\n(Convert an existing GameShark code from one revision/version to another of the same game)\n\n");
         return(1);
     }  
 }
