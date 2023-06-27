@@ -62,6 +62,8 @@ The very first kind of 'standardized' additional copy protection that appeared f
 
 Affects: Non-stealth mod-chips and traditional swap tricks. **Does not affect [modern soft-mods](#modern-soft-mods).**
 
+![PoPoRogue Japan Rev 0 APv1 Screen](images/poporogue-japan-rev-0-non-stealth-mod-chip-apv1-triggered.png)
+
 ### APv2
 
 This protection was first seen in probably in the Japan release of [Dino Crisis](http://redump.org/disc/1598/). This protection has the following checks:
@@ -73,6 +75,8 @@ This protection was first seen in probably in the Japan release of [Dino Crisis]
 Affects: Non-stealth mod-chips, swap tricks, **[modern soft-mods](#modern-soft-mods) without explicit support for bypassing it.**
 
 There is an explicit backdoor in the APv1 protection so that it succeeds on SCPH-1000 and early SCPH-3000 consoles which lack the ReadTOC command in the CDROM Controller firmware versions C0A and C0B. If the TOC data is correct (which [modern soft-mods](#modern-soft-mods) guarantee on game boot) this protection will effectively disable itself as long as a non-stealth mod-chip is installed. For more info on this (which is what inspired APrip in the first place), see the [How It Works](#how-it-works) section.
+
+![Dino Crisis USA Rev 0 APv2 Screen](images/dino-crisis-usa-rev-0-non-stealth-mod-chip-apv2-triggered.png)
 
 ### APv1/APv2 APrip Patch Success Rate
 
@@ -87,6 +91,8 @@ LibCrypt was first introduced in the European releases of [MediEvil](http://redu
 *   Verifies a [16-bit key based on invalid SubChannel data](https://red-j.github.io/Libcrypt-PS1-Protection-bible/index.htm) which is 'corrected' to valid data (which mis-matches what the game executable expect) when a ripped image is burned back to a CD-R. The European releases of MediEvil are the only games with this version of LibCrypt, all future SCEE European PSX titles that have LibCrypt have a newer version which works differently.
 
 Affects: Booting a CD-R burned by normal software in BIN/CUE format. No soft-mod currently bypasses this 'on the fly'.
+
+![MediEvil Europe LibCrypt v1 Screen Of Death](images/medievil-europe-lc1-screen.png.png)
 
 ### LibCrypt v1 Patch Success Rate
 
@@ -172,7 +178,7 @@ The first thing to do is to rip and or acquire a CD image of your desired game. 
 
 *	On Linux, execute `./aprip -b <track 01.bin>` in your Terminal. On Windows, execute  `aprip.exe -b <track 01.bin>` in `cmd.exe`. _Replace `<track 01.bin>` with the actual first or only data track from the game you want to patch_.
 
-*	If you see `got APv1 table match` or `got APv2 table match` then congratulations, the game can no longer detect a non-stealth modchip or [modern soft-mod](#modern-soft-mods). _Traditional Swap tricks with  or APv2 will still trigger the detection however_.
+*	If you see `got APv1 table match` or `got APv2 table match` then congratulations, the game can no longer detect a non-stealth modchip or [modern soft-mod](#modern-soft-mods).
 
 ![Dino Crisis 2 Japan BIN patched](images/dinocrisis2j-patched.png)
 
