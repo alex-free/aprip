@@ -1,0 +1,53 @@
+MediEvil France ICEPICK patch (TRSI) reversing 
+
+hexdiff
+
+Offset   Old New    Byte at 47 byte match to edit
+1B2D2A74 0A 00      0
+1B2D2A75            1 skip
+1B2D2A76 80 00      2
+1B2D2A77 14 00      3
+1B2D2A78            4 skip
+1B2D2A79            5 skip
+1B2D2A7A            6 skip
+1B2D2A7B            7 skip 
+1B2D2A7C            8 skip
+1B2D2A7D            9 skip 
+1B2D2A7E A3 00      10
+1B2D2A7F 90 00      11
+1B2D2A80 02 00      12
+1B2D2A81            13 skip
+1B2D2A82 02 00      14
+1B2D2A83 24 00      15
+1B2D2A84 06 00      16
+1B2D2A85            17 skip
+1B2D2A86 62 00      18
+1B2D2A87 14 00      19
+1B2D2A88 0E 00      20
+1B2D2A89 80 00      21
+1B2D2A8A 03 00      22
+1B2D2A8B 3C 00      23
+1B2D2A8C 04 00      24
+1B2D2A8D            25 skip
+1B2D2A8E A3 00      26
+1B2D2A8F 90 00      27
+1B2D2A90 53 00      28
+1B2D2A91            29 skip
+1B2D2A92 02 00      30
+1B2D2A93 24 00      31
+1B2D2A94 02 00      32
+1B2D2A95            33 skip
+1B2D2A96 62 00      34
+1B2D2A97 14 00      35
+1B2D2A98 0E 00      36
+1B2D2A99 80 00      37
+1B2D2A9A 03 00      38
+1B2D2A9B 3C 00      39
+1B2D2A9C 07 00      40
+1B2D2A9D            41 skip
+1B2D2A9E A4 00      42
+1B2D2A9F 90 00      43
+1B2D2AA0 00 6A      44
+1B2D2AA1 00 D1      45
+1B2D2AA2 00 04      46
+1B2D2AA3 00 24      47 (0x2F byte match)

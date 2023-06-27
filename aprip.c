@@ -29,7 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <string.h>
 
-#define VER "1.0.3"
+#define VER "1.0.4"
 FILE *bin;
 FILE *mem_dump_1;
 FILE *mem_dump_2;
@@ -63,6 +63,11 @@ const unsigned char play = 0x03;
 const unsigned char pause = 0x09;
 const unsigned char sync = 0x00;
 
+const unsigned char medievil_europe_ps_exe [] =  { 0x53, 0x43, 0x45, 0x53, 0x5F, 0x30, 0x30, 0x33, 0x2E, 0x31, 0x31, 0x3B, 0x31}; // SCES_003.11;1
+const unsigned char medievil_france_ps_exe [] =  { 0x53, 0x43, 0x45, 0x53, 0x5F, 0x30, 0x31, 0x34, 0x2E, 0x39, 0x32, 0x3B, 0x31}; // SCES_014.92;1
+const unsigned char medievil_germany_ps_exe [] = { 0x53, 0x43, 0x45, 0x53, 0x5F, 0x30, 0x31, 0x34, 0x2E, 0x39, 0x33, 0x3B, 0x31}; // SCES_014.93;1
+const unsigned char medievil_italian_ps_exe [] = { 0x53, 0x43, 0x45, 0x53, 0x5F, 0x30, 0x31, 0x34, 0x2E, 0x39, 0x34, 0x3B, 0x31}; // SCES_014.94;1
+const unsigned char medievil_spain_ps_exe [] =   { 0x53, 0x43, 0x45, 0x53, 0x5F, 0x30, 0x31, 0x34, 0x2E, 0x39, 0x35, 0x3B, 0x31}; // SCES_014.95;1
 
 const unsigned char libcrypt_2_anti_pro_action_replay[] = {
     0x80, 0xE1, 0x02, 0x3C, 0x00, 0x38, 0x82, 0x40
@@ -75,6 +80,59 @@ const unsigned char libcrypt_2_anti_mod_chip[] = {
 const unsigned char libcrypt_2_magic_word[] = {
     0x25, 0x30, 0x86, 0x00    
 };
+
+// ICEPICK patch from TRSIMEDI, modified for aprip 
+const unsigned char libcrypt_1_medievil_icepick_based_patch[] = {
+0x0A, 
+0x00, // not a value checked
+0x80,
+0x14,
+0x00, // not a value checked
+0x00, // not a value checked
+0x00, // not a value checked
+0x00, // not a value checked
+0x00, // not a value checked
+0x00, // not a value checked
+0xA3, 
+0x90, 
+0x02,
+0x00, // not a value checked
+0x02, 
+0x24, 
+0x06, 
+0x00, // not a value checked
+0x62, 
+0x14, 
+0x0E, 
+0x80, 
+0x03, 
+0x3C, 
+0x04, 
+0x00, // not a value checked
+0xA3, 
+0x90, 
+0x53, 
+0x00, // not a value checked
+0x02, 
+0x24, 
+0x02, 
+0x00, // not a value checked
+0x62, 
+0x14, 
+0x0E, 
+0x80, 
+0x03, 
+0x3C, 
+0x07,
+0x00, // not a value checked
+0xA4, 
+0x90, 
+0x00, 
+0x00, // byte 2 of MW
+0x00, // byte 1 of MW
+0x00, 
+0x00
+}; // 0x2F, 47 bytes
 
 const unsigned char anti_piracy_v1[] = { // The very first anti-piracy code. Found in PopoRogue, Ape Escape, etc. Does only 3 SCEX check for dumb non-stealth modchips.
     0x01, 0x00, 0x01, 0x03, // GetStat
@@ -114,6 +172,17 @@ bool matched_libcrypt_2_anti_pro_action_replay;
 bool matched_libcrypt_2_anti_mod_chip;
 bool matched_libcrypt_2_magic_word;
 bool matched_libcrypt_2;
+
+bool matched_libcrypt_1_magic_word;
+bool matched_libcrypt_1_part_2;
+bool matched_libcrypt_1_part_3;
+
+bool directory_record_sectors_maybe = true;
+bool libcrypt_1;
+bool matched_libcrypt_1_icepick_based_patch;
+
+bool check_for_apv2 = true;
+bool check_for_apv1 = true;
 
 void bin_patch_libcrypt(const char **argv)
 {
@@ -161,6 +230,9 @@ void bin_patch_libcrypt(const char **argv)
         if((current_fpos + 0x930) == max_size) // odd number of sectors
             last_sector = 1; // This function is reading 2 sectors at a time, so if there is an odd number of sectors we have to change the behavior to only search the last sector. Explicitly break loop when this is set.
 
+        if((current_fpos > (0x930 * 25))) // after 4 sectors (22, 23, 24, 25) stop looking for libcrypt 1 PS-EXE boot filename
+            directory_record_sectors_maybe = false;
+
         for(int i=0; i < 0x800; i++)
         {
             sectors[i] = buf[current_fpos + i + 0x18]; // skip 0x18 header info per sector
@@ -179,129 +251,229 @@ void bin_patch_libcrypt(const char **argv)
 
         for(int s = 0; s < search_size; s++)
         {
-            matched_anti_piracy_v1 = true;
-            for(int i=0; i < 40; i++)
-            {                
-                if(anti_piracy_v1[i] != sectors[s + i])
-                {
-                    if(i != 3 && i != 7 && i != 11 && i != 15 && i != 19 && i != 23 && i != 27 && i != 31 && i != 35 && i != 39) // These bytes could change, they can be 03 or 05 depending on the AP code in the game but the table itself remains consistent besides the value of every 4th byte and the commands are still obvious via this pattern
+            if(check_for_apv1)
+            {
+                // APv1/APv1.5
+                matched_anti_piracy_v1 = true;
+                for(int i=0; i < 40; i++)
+                {                
+                    if(anti_piracy_v1[i] != sectors[s + i])
+                    {
+                        if(i != 3 && i != 7 && i != 11 && i != 15 && i != 19 && i != 23 && i != 27 && i != 31 && i != 35 && i != 39) // These bytes could change, they can be 03 or 05 depending on the AP code in the game but the table itself remains consistent besides the value of every 4th byte and the commands are still obvious via this pattern
                         matched_anti_piracy_v1 = false; 
+                    }
+                }
+
+                if(matched_anti_piracy_v1) 
+                {     
+                    printf("Got anti-piracy v1 table match\n");
+                    sectors[s + 20] = sync; // Replace SubFunq X's bytes with '00' bytes
+                    sectors[s + 21] = sync;
+                    sectors[s + 22] = sync;
+                    sectors[s + 23] = sync;
+
+                    sectors[s + 32] = sync; /// Replace SubFunq Y's bytes with '00' bytes
+                    sectors[s + 33] = sync;
+                    sectors[s + 34] = sync;
+                    sectors[s + 35] = sync;
                 }
             }
 
-            if(matched_anti_piracy_v1) 
-            {            
-                printf("Got anti-piracy v1 table match\n");
-                sectors[s + 20] = sync; // Replace SubFunq X's bytes with '00' bytes
-                sectors[s + 21] = sync;
-                sectors[s + 22] = sync;
-                sectors[s + 23] = sync;
-
-                sectors[s + 32] = sync; /// Replace SubFunq Y's bytes with '00' bytes
-                sectors[s + 33] = sync;
-                sectors[s + 34] = sync;
-                sectors[s + 35] = sync;
-            }
-
-            matched_anti_piracy_v2 = true;
-            for(int i=0; i < 52; i++)
-            {                
+            if(check_for_apv2)
+            {
+                // APv2
+                matched_anti_piracy_v2 = true;
+                for(int i=0; i < 52; i++)
+                {                
     
-                if(anti_piracy_v2[i] != sectors[s + i])
-                {
-                    if(i != 3 && i != 7 && i != 11 && i != 15 && i != 19 && i != 23 && i != 27 && i != 31 && i != 35 && i != 39 && i != 43 && i != 47 && i != 51) // These bytes could change, they can be 03 or 05 depending on the AP code in the game but the table itself remains consistent besides the value of every 4th byte and the commands are still obvious via this pattern
+                    if(anti_piracy_v2[i] != sectors[s + i])
                     {
-                        matched_anti_piracy_v2 = false;
+                        if(i != 3 && i != 7 && i != 11 && i != 15 && i != 19 && i != 23 && i != 27 && i != 31 && i != 35 && i != 39 && i != 43 && i != 47 && i != 51) // These bytes could change, they can be 03 or 05 depending on the AP code in the game but the table itself remains consistent besides the value of every 4th byte and the commands are still obvious via this pattern
+                        {
+                            matched_anti_piracy_v2 = false;
+                        }
+                    }      
+                }
+
+                if(matched_anti_piracy_v2) 
+                {
+                   printf("Got anti-piracy v2 table match\n");
+                    sectors[s + 36] = pause; // Replace SubFunq X's first byte with the Pause command's first byte
+                    sectors[s + 40] = play; // Replace SubFunq Y's first byte with the Play command's first byte
+                    sectors[s + 48] = sync; // Replace ReadTOC's first byte with the first byte of the sync command. This seems to trigger the VC0 CDROM Controller BIOS Firmware behavior on all consoles. The VC0 CDROM Controller BIOS firmware does not have the ReadTOC command, it is found in the wild in early SCPH-3000 Japanese consoles and in all SCPH-1000 consoles.
+			    }
+            }
+
+            if((directory_record_sectors_maybe) && (!libcrypt_1))
+            {
+                libcrypt_1 = true;
+                
+                for(int i=0; i < 13; i++)
+                {                
+                    if(
+                    (medievil_europe_ps_exe[i] != sectors[s + i]) &&
+                    (medievil_france_ps_exe[i] != sectors[s + i]) &&
+                    (medievil_germany_ps_exe[i] != sectors[s + i]) &&
+                    (medievil_italian_ps_exe[i] != sectors[s + i]) && 
+                    (medievil_spain_ps_exe[i] != sectors[s + i])
+                    )
+                    {
+                        libcrypt_1 = false;
                     }
-                }      
+                }
             }
 
-            if(matched_anti_piracy_v2) 
+            if(libcrypt_1)
             {
-                printf("Got anti-piracy v2 table match\n");
-                sectors[s + 36] = pause; // Replace SubFunq X's first byte with the Pause command's first byte
-                sectors[s + 40] = play; // Replace SubFunq Y's first byte with the Play command's first byte
-                sectors[s + 48] = sync; // Replace ReadTOC's first byte with the first byte of the sync command. This seems to trigger the VC0 CDROM Controller BIOS Firmware behavior on all consoles. The VC0 CDROM Controller BIOS firmware does not have the ReadTOC command, it is found in the wild in early SCPH-3000 Japanese consoles and in all SCPH-1000 consoles.
-			}
+                check_for_apv2 = false;
+                check_for_apv1 = false;
+                matched_libcrypt_1_icepick_based_patch = true;
+                for(int i=0; i < 47; i++)
+                {                
+                    if(libcrypt_1_medievil_icepick_based_patch[i] != sectors[s + i])
+                    {
+                       if(i != 1 && i != 4 && i != 5 && i != 6  && i != 7 && i != 8 && i != 9 && i != 13 && i != 17 && i != 25 && i != 29 && i != 33 && i != 41) // These are not matchable so they are 0x00 in the array and not checked here
+                        {
+                            matched_libcrypt_1_icepick_based_patch = false;
+                        }
+                    }   
+                }
 
-            matched_libcrypt_2_anti_pro_action_replay = true;
-            for(int i=0; i < 8; i++)
-            {                
-                if(libcrypt_2_anti_pro_action_replay[i] != sectors[s + i])
-                    matched_libcrypt_2_anti_pro_action_replay = false;
-            }
+                if(matched_libcrypt_1_icepick_based_patch)
+                {
+                    printf("Got LibCrypt v1 ICEPICK match\n");
+                    sectors[s + 0] = 0x00;
+                    // skip 1
+                    sectors[s + 2] = 0x00;
+                    sectors[s + 3] = 0x00;
+                    // skip 4
+                    // skip 5
+                    // skip 6
+                    // skip 7
+                    // skip 8
+                    // skip 9
+                    sectors[s + 10] = 0x00;
+                    sectors[s + 11] = 0x00;
+                    sectors[s + 12] = 0x00;
+                    // skip 13
+                    sectors[s + 14] = 0x00;
+                    sectors[s + 15] = 0x00;
+                    sectors[s + 16] = 0x00;
+                    // skip 17
+                    sectors[s + 18] = 0x00;
+                    sectors[s + 19] = 0x00;
+                    sectors[s + 20] = 0x00;   
+                    sectors[s + 21] = 0x00;
+                    sectors[s + 22] = 0x00;
+                    sectors[s + 23] = 0x00;  
+                    sectors[s + 24] = 0x00;
+                    // skip 25
+                    sectors[s + 26] = 0x00;
+                    sectors[s + 27] = 0x00;
+                    sectors[s + 28] = 0x00;
+                    // skip 29
+                    sectors[s + 30] = 0x00;
+                    sectors[s + 31] = 0x00;
+                    sectors[s + 32] = 0x00;   
+                    // skip 33
+                    sectors[s + 34] = 0x00;
+                    sectors[s + 35] = 0x00;
+                    sectors[s + 36] = 0x00;   
+                    sectors[s + 37] = 0x00;
+                    sectors[s + 38] = 0x00;
+                    sectors[s + 39] = 0x00;  
+                    sectors[s + 40] = 0x00;   
+                    // skip 41
+                    sectors[s + 42] = 0x00;
+                    sectors[s + 43] = 0x00;
+                    sectors[s + 44] = bytes[0];   // Magic Word byte 2
+                    sectors[s + 45] = bytes[1];   // Magic Word byte 1
+                    sectors[s + 46] = 0x04;
+                    sectors[s + 47] = 0x24;  
+                }
 
-            if(matched_libcrypt_2_anti_pro_action_replay)
-            {
-                printf("Detected LibCrypt 2 Anti-Pro Action Replay\n");
-                sectors[s + 0] = 0x00;
-                sectors[s + 1] = 0x00;
-                sectors[s + 2] = 0x00;
-                sectors[s + 3] = 0x00;
-                sectors[s + 4] = 0x00;
-                sectors[s + 5] = 0x00;
-                sectors[s + 6] = 0x00;
-                sectors[s + 7] = 0x00;
-            }
+            } else {
+                // LibCrypt v2 (majority of LibCrypt games)
+                matched_libcrypt_2_anti_pro_action_replay = true;
+                for(int i=0; i < 8; i++)
+                {                
+                    if(libcrypt_2_anti_pro_action_replay[i] != sectors[s + i])
+                        matched_libcrypt_2_anti_pro_action_replay = false;
+                }
 
-            matched_libcrypt_2_anti_mod_chip = true;
-            for(int i=0; i < 24; i++)
-            {                
-                if(libcrypt_2_anti_mod_chip[i] != sectors[s + i])
-                    matched_libcrypt_2_anti_mod_chip = false;
-            }
+                if(matched_libcrypt_2_anti_pro_action_replay)
+                {
+                    printf("Got LibCrypt v2 Anti-Pro Action Replay match\n");
+                    sectors[s + 0] = 0x00;
+                    sectors[s + 1] = 0x00;
+                    sectors[s + 2] = 0x00;
+                    sectors[s + 3] = 0x00;
+                    sectors[s + 4] = 0x00;
+                    sectors[s + 5] = 0x00;
+                    sectors[s + 6] = 0x00;
+                    sectors[s + 7] = 0x00;
+                }
 
-            if(matched_libcrypt_2_anti_mod_chip)
-            {
-                printf("Detected LibCrypt 2 Anti-Mod-Chip\n");
-                // Part 1
-                sectors[s + 0] = 0x00;
-                sectors[s + 1] = 0x00;
-                sectors[s + 2] = 0x00;
-                sectors[s + 3] = 0x00;
-                // Part 2
-                sectors[s + 4] = 0x02;
-                sectors[s + 5] = 0x00;
-                sectors[s + 6] = 0xE7;
-                sectors[s + 7] = 0x30;
-                // Part 3
-                sectors[s + 8] = 0x00;
-                sectors[s + 9] = 0x00;
-                sectors[s + 10] = 0x00;
-                sectors[s + 11] = 0x00;
-                // Part 4
-                sectors[s + 12] = 0xAD;
-                sectors[s + 13] = 0xFF;
-                sectors[s + 14] = 0x84;
-                sectors[s + 15] = 0x20;
-                // Part 5
-                sectors[s + 16] = 0x00;
-                sectors[s + 17] = 0x00;
-                sectors[s + 18] = 0x00;
-                sectors[s + 19] = 0x00;
-                // Part 6
-                sectors[s + 20] = 0x00;
-                sectors[s + 21] = 0x00;
-                sectors[s + 22] = 0x00;
-                sectors[s + 23] = 0x00;
-            }
+                matched_libcrypt_2_anti_mod_chip = true;
+                for(int i=0; i < 24; i++)
+                {                
+                    if(libcrypt_2_anti_mod_chip[i] != sectors[s + i])
+                        matched_libcrypt_2_anti_mod_chip = false;
+                }
 
-            matched_libcrypt_2_magic_word = true;
-            for(int i=0; i < 4; i++)
-            {                
-                if(libcrypt_2_magic_word[i] != sectors[s + i])
-                    matched_libcrypt_2_magic_word = false;
-            }
+                if(matched_libcrypt_2_anti_mod_chip)
+                {
+                    printf("Got LibCrypt v2 Anti-Mod-Chip match\n");
+                    // Part 1
+                    sectors[s + 0] = 0x00;
+                    sectors[s + 1] = 0x00;
+                    sectors[s + 2] = 0x00;
+                    sectors[s + 3] = 0x00;
+                    // Part 2
+                    sectors[s + 4] = 0x02;
+                    sectors[s + 5] = 0x00;
+                    sectors[s + 6] = 0xE7;
+                    sectors[s + 7] = 0x30;
+                    // Part 3
+                    sectors[s + 8] = 0x00;
+                    sectors[s + 9] = 0x00;
+                    sectors[s + 10] = 0x00;
+                    sectors[s + 11] = 0x00;
+                    // Part 4
+                    sectors[s + 12] = 0xAD;
+                    sectors[s + 13] = 0xFF;
+                    sectors[s + 14] = 0x84;
+                    sectors[s + 15] = 0x20;
+                    // Part 5
+                    sectors[s + 16] = 0x00;
+                    sectors[s + 17] = 0x00;
+                    sectors[s + 18] = 0x00;
+                    sectors[s + 19] = 0x00;
+                    // Part 6
+                    sectors[s + 20] = 0x00;
+                    sectors[s + 21] = 0x00;
+                    sectors[s + 22] = 0x00;
+                    sectors[s + 23] = 0x00;
+                }
 
-            if(matched_libcrypt_2_magic_word)
-            {
-                printf("Detected LibCrypt 2 Magic Word\n");
-                sectors[s + 0] = bytes[1];
-                sectors[s + 1] = bytes[0];
+                matched_libcrypt_2_magic_word = true;
+                for(int i=0; i < 4; i++)
+                {                
+                    if(libcrypt_2_magic_word[i] != sectors[s + i])
+                        matched_libcrypt_2_magic_word = false;
+                }
 
-                sectors[s + 2] = 0xC6;
-                sectors[s + 3] = 0x34;
-                		// 6C 3A C6 34
+                if(matched_libcrypt_2_magic_word)
+                {
+                    printf("Got LibCrypt v2 Magic Word match\n");
+                    sectors[s + 0] = bytes[1];
+                    sectors[s + 1] = bytes[0];
+
+                    sectors[s + 2] = 0xC6;
+                    sectors[s + 3] = 0x34;
+                    		// 6C 3A C6 34
+                }
+
             }
         }
 		
@@ -702,7 +874,7 @@ int main (int argc, const char * argv[])
    if(argc == 3)
     {
         if((strcmp("-b", argv[1])) == 0) {
-        current_fpos = (19 * 0x930); // Start 'fpos' at sector 19 for a small speed increase. https://problemkaputt.de/psx-spx.htm#cdromfileofficialsonyfileformats
+        current_fpos = 0;
         printf("MODE: BIN patcher\n");
             if((bin = fopen(argv[2], "rb+")) != NULL)
             {
@@ -727,8 +899,8 @@ int main (int argc, const char * argv[])
         }
     } else if (argc == 4) {
         if((strcmp("-b", argv[1])) == 0) {
-        current_fpos = (19 * 0x930); // Start 'fpos' at sector 19 for a small speed increase. https://problemkaputt.de/psx-spx.htm#cdromfileofficialsonyfileformats
-        printf("MODE: BIN patcher (LibCrypt 2)\n");
+        current_fpos = 0;
+        printf("MODE: BIN patcher (LibCrypt v1/LibCrypt v2)\n");
             if((bin = fopen(argv[3], "rb+")) != NULL)
             {
                 bin_patch_libcrypt(argv);

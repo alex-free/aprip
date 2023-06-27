@@ -4,7 +4,7 @@
 
 By Alex Free
 
-APrip is a portable open source tool capable of bypassing/patching-out the various 'standardized' additional anti-piracy copy protection implementations found in some later PSX games. The goal of APrip is to enable the use of [standard CD burning software](#standard-cd-burning-software) with BIN+CUE CD images to enable play of burned CD-R game discs using either a non-stealth mod-chip or a [modern soft-mod](#modern-soft-mod). It accomplishes this by using [multiple generic patching methods](#how-it-works) (no hard-coded values) in an attempt to become the ultimate all in one anti-piracy patching solution for the PSX.
+APrip is a portable open source tool capable of bypassing/patching-out the various 'standardized' additional anti-piracy copy protection implementations found in some later PSX games. The goal of APrip is to enable the use of [standard CD burning software](#standard-cd-burning-software) with BIN+CUE CD images to enable play of burned CD-R game discs using either a non-stealth mod-chip or a [modern soft-mod](#modern-soft-mods). It accomplishes this by using [multiple generic patching methods](#how-it-works) (no hard-coded values) in an attempt to become the ultimate all in one anti-piracy patching solution for the PSX.
 
 ## Usage
 
@@ -23,19 +23,17 @@ _More Info_
 
 ## Downloads
 
-### Version 1.0.3 (6/22/2023)
+### Version 1.0.4 (6/26/2023)
 
-*	[aprip-1.0.3-windows-x86](https://github.com/alex-free/aprip/releases/download/v1.0.3/aprip-1.0.3-windows_x86.zip) _For Windows 95 OSR 2.5 Or Newer (32-bit Windows)_
-*	[aprip-1.0.3-windows-x86_64](https://github.com/alex-free/aprip/releases/download/v1.0.3/aprip-1.0.3-windows_x86_64.zip) _For 64-bit Windows_
-*	[aprip-1.0.3-linux-x86](https://github.com/alex-free/aprip/releases/download/v1.0.3/aprip-1.0.3-linux_x86_static.zip) _For x86 Linux Distros_
-*	[aprip-1.0.3-linux-x86_64](https://github.com/alex-free/aprip/releases/download/v1.0.3/aprip-1.0.3-linux_x86_64_static.zip) _For x86_64 Linux Distros_
-*	[aprip-1.0.3-source](https://github.com/alex-free/aprip/archive/refs/tags/v1.0.3.zip)
+*	[aprip-1.0.4-windows-x86](https://github.com/alex-free/aprip/releases/download/v1.0.4/aprip-1.0.4-windows_x86.zip) _For Windows 95 OSR 2.5 Or Newer (32-bit Windows)_
+*	[aprip-1.0.4-windows-x86_64](https://github.com/alex-free/aprip/releases/download/v1.0.4/aprip-1.0.4-windows_x86_64.zip) _For 64-bit Windows_
+*	[aprip-1.0.4-linux-x86](https://github.com/alex-free/aprip/releases/download/v1.0.4/aprip-1.0.4-linux_x86_static.zip) _For x86 Linux Distros_
+*	[aprip-1.0.4-linux-x86_64](https://github.com/alex-free/aprip/releases/download/v1.0.4/aprip-1.0.4-linux_x86_64_static.zip) _For x86_64 Linux Distros_
+*	[aprip-1.0.4-source](https://github.com/alex-free/aprip/archive/refs/tags/v1.0.4.zip)
 
 Changes:
 
-*	Added support for LibCrypt 2 CD image patching.
-
-*   Substantial documentation rewrite.
+*	Added support for LibCrypt v1 CD image patching (all the PAL regional releases of MediEvil now work)!
 
 [About Previous Versions](changelog.md).
 
@@ -45,7 +43,11 @@ Changes:
 *	[Github](https://github.com/alex-free/aprip)
 *	[Tonyhax International](https://alex-free.github.io/tonyhax-international)
 *	[Tonyhax International APv2 Bypass System](https://alex-free.github.io/tonyhax-international/anti-piracy-bypass.html)
-*   [FF VIII APv1 In-Depth](https://consolecopyworld.com/psx/psx_ff8_protection.shtml)
+*   [FF VIII APv1 Reversing](https://consolecopyworld.com/psx/psx_ff8_protection.shtml)
+*   [MediEvil LibCrypt v1 Reversing](https://consolecopyworld.com/psx/psx_medievil.shtml)
+*   [LibCrypt PS1 Protection Bible](https://red-j.github.io/Libcrypt-PS1-Protection-bible/index.htm)
+*   [APv2 Decomp/Reversing By Socram8888](https://github.com/socram8888/tonyhax/blob/master/docs/ap_v2.c)
+
 
 ## Anti-Piracy Types & Support
 
@@ -56,17 +58,9 @@ Starting in late 1998, some specific PSX games began implementing additional cop
 The very first kind of 'standardized' additional copy protection that appeared first in the Japan only game [PoPoRogue](http://redump.org/disc/1552/). This protection does the following checks:
 
 *   19'04/19'05 test commands to check for SCEX spamming
-
-Affects: Non-stealth mod-chips (that constantly spam SCEX string to CDROM controller). **Does not affect [modern soft-mods](#modern-soft-mod).**
-
-### APv1.5
-
-A slight tweak was made after the embarrassment of how trivial it was to bypass the PoPoRogue Japan protection via a stock console using a swap trick. This upgraded protection checks for the expected TOC data to be returned for the current disc (number of tracks on disc, and length of each track) which would be invalid with a traditional swap trick. This protection was seen in the Japan release [Vandal Harts II](http://redump.org/disc/4854/), although I'm quite unsure what the first game to 'upgrade' from APv1 was. The protection has the following checks:
-
-*   19'04/19'05 test commands to check for SCEX spamming
 *   GetTN/GetTD commands to check TOC data validity.
 
-Affects: Non-stealth mod-chips and traditional swap tricks. **Does not affect [modern soft-mods](#modern-soft-mod).**
+Affects: Non-stealth mod-chips and traditional swap tricks. **Does not affect [modern soft-mods](#modern-soft-mods).**
 
 ### APv2
 
@@ -80,21 +74,29 @@ Affects: Non-stealth mod-chips, swap tricks, **[modern soft-mods](#modern-soft-m
 
 There is an explicit backdoor in the APv1 protection so that it succeeds on SCPH-1000 and early SCPH-3000 consoles which lack the ReadTOC command in the CDROM Controller firmware versions C0A and C0B. If the TOC data is correct (which [modern soft-mods](#modern-soft-mods) guarantee on game boot) this protection will effectively disable itself as long as a non-stealth mod-chip is installed. For more info on this (which is what inspired APrip in the first place), see the [How It Works](#how-it-works) section.
 
-### APv1/APv1.5/APv2 APrip Patch Success Rate
+### APv1/APv2 APrip Patch Success Rate
 
 [GameShark codes generation](#generating-gameshark-codes) seems to have a 100% success rate. 
 
-[CD Image Patching](#patching-the-cd-image) is confirmed less then 100%, although it is unknown how many don't work. The CD patching method is not 100% because some games appear to obfuscate the code in the CD image. APv1.5 also seems to have varying code for the checks which the patching methods miss.
+[CD Image Patching](#patching-the-cd-image) is confirmed less then 100%, although it is unknown how many don't work. The CD patching method is not 100% because some games appear to obfuscate the code in the CD image.  also seems to have varying code for the checks which the patching methods miss.
 
 ### LibCrypt v1
 
-LibCrypt was first introduced in the European releases of [MediEvil](http://redump.org/disc/592/), this is a completely different type of protection from what was previously seen with APv1/Apv1.5/Apv2. It was [first patched](https://consolecopyworld.com/psx/psx_medievil.shtml) almost immedietly after it's introduction. It has the following check:
+LibCrypt was first introduced in the European releases of [MediEvil](http://redump.org/disc/592/), this is a completely different type of protection from what was previously seen with APv1//Apv2. It was [first patched](https://consolecopyworld.com/psx/psx_medievil.shtml) almost immedietly after it's introduction. It has the following check:
 
 *   Verifies a [16-bit key based on invalid SubChannel data](https://red-j.github.io/Libcrypt-PS1-Protection-bible/index.htm) which is 'corrected' to valid data (which mis-matches what the game executable expect) when a ripped image is burned back to a CD-R. The European releases of MediEvil are the only games with this version of LibCrypt, all future SCEE European PSX titles that have LibCrypt have a newer version which works differently.
 
 Affects: Booting a CD-R burned by normal software in BIN/CUE format. No soft-mod currently bypasses this 'on the fly'.
 
-Aprip does not yet support patching LibCrypt v1, but it will definitely be added shortly in an update coming soon.
+### LibCrypt v1 Patch Success Rate
+
+APrip 100% supports patching the [CD Image](#patching-the-cd-image) of every PAL region release of MediEvil, which are the only games to release with LibCrypt v1 protection:
+
+*   [Europe](http://redump.org/disc/592/)
+*   [France](http://redump.org/disc/13389/)
+*   [Germany](http://redump.org/disc/25542/)
+*   [Italy](http://redump.org/disc/29475/)
+*   [Spain](http://redump.org/disc/1584/)
 
 ### LibCrypt v2
 
@@ -107,7 +109,9 @@ This is reportedly the version of LibCrypt used by almost all titles using this 
 
 Affects: Booting a CD-R burned by normal software in BIN/CUE format, consoles with Pro Action Replay in-use, swap tricks, and non-stealth mod-chips booting said CD-R. No soft-mod currently bypasses this 'on the fly'.
 
-APrip does have support for patching the [CD Image](#patching-the-cd-image) to enable games containing LibCrypt v22 protections to be burned with standard burning software and to allow them to be used on any console, via any boot method (be that soft-mod or hard-mod). Unsure yet how compatible this is across all games with LibCrypt v2.
+### LibCrypt v2 Patch Success Rate
+
+APrip does have support for patching the [CD Image](#patching-the-cd-image) to enable games containing LibCrypt v2 protections to be burned with standard burning software and to allow them to be used on any console, via any boot method (be that soft-mod or hard-mod). Unsure yet how compatible this is across all games with LibCrypt v2, though it really should work for every game with LibCrypt v2.
 
 ### LibCrypt v3
 
@@ -120,7 +124,7 @@ This version of LibCrypt is used in later titles containing the protection, all 
 
 Affects: Booting a CD-R burned by normal software in BIN/CUE format, consoles with Pro Action Replay in-use, swap tricks, and non-stealth mod-chips booting said CD-R. No soft-mod currently bypasses this 'on the fly'.
 
-Aprip does not yet support patching LibCrypt v3, and don't hold your breath for it either.
+**Aprip does not yet support patching LibCrypt v3**
 
 ### LibCrypt v4
 
@@ -132,65 +136,69 @@ This is the very last version of LibCrypt used in the European game [F1 2000](ht
 
 Affects: Booting a CD-R burned by normal software in BIN/CUE format, consoles with Pro Action Replay in-use, swap tricks, and non-stealth mod-chips booting said CD-R. No soft-mod currently bypasses this 'on the fly'.
 
-Aprip does not yet support patching LibCrypt v4, but honestly I'll probably get around to adding it.
+**Aprip does not yet support patching LibCrypt v4**
 
 ### EDC
 
 In addition to APv1 or APv2 protection, some later games may also contain a protection measure known as the EDC check. For the affected games, this protection is triggered when you burn the EDC protected PSX CD image with standard CD burning software, which in most cases will changes the EDC data when burning an EDC protected PSX CD image. This is very similar to LibCrypt, but it is not as hard to bypass as instead of using SubChannel data, it's only using EDC data.
 
-The EDC check can be defeated by simply forcing the EDC data to not be changed when burning such a protected PSX CD image. Not every CD burning software has an option which can do this, and I'm not sure if I'll get around to implementing patching support as I doubt this anywhere close to generic.
+The EDC check can be defeated by simply forcing the EDC data to not be changed when burning such a protected PSX CD image. You therefore can not burn an APrip patched CD image using [Standard CD Burning Software](#standard-cd-burning-software) correctly if the game contains this EDC protection. You can however use something like [cdrdao-pled](https://alex-free.github.io/cdrdao) to burn an unmodified CD image, and then use GameShark codes [generated by aprip](#generating-gameshark-codes) to achieve a bypass.
+
+I'd like to implement [CD Image Patching](#patching-the-cd-image) support at some point however.
 
 ## Modern Soft-Mods
 
-These PSX soft-mods are capable of correctly playing APrip patched CD-Rs:
+These PSX soft-mods are capable of correctly playing APrip patched BIN+CUE CD image burned with [standard CD burning software](#standard-cd-burning-software) to a CD-R:
 
 * [Stealth Unlocker](https://www.psxdev.net/forum/viewtopic.php?t=3966)
 * [Tonyhax International](https://alex-free.github.io/tonyhax-international)
 * [Tonyhax](https://orca.pet/tonyhax/)
-* [UniROM](https://unirom.github.io/) _Note:_ SCPH-1000/SCPH-3000 not properly supported by the current version as of 6/22/2023.
+* [UniROM](https://unirom.github.io/) _Note:_ SCPH-1000/SCPH-3000 not properly supported by the current version as of 6/26/2023.
 
 ## Standard CD Burning Software
 
 APrip patched disc images can be burned by _any CD burning software that regenerates EDC protection on the fly_. If you don't know what this is, you probably have it already. Such popular software includes:
 
-*   [ImgBurn](https://www.imgburn.com/)
-*   [CDRDAO](https://cdrdao.sourceforge.net/)
+*   [ImgBurn](https://www.imgburn.com/).
+*   [CDRDAO](https://cdrdao.sourceforge.net/) (with the default `generic-mmc` driver. This can also be explicitly set with the `--driver generic-mmc` argument to `cdrdao`).
 
 ## Patching The CD Image
 
 APrip can take some time to patch a BIN file as it has to scan the entire file. Depending on how fast the computer you run APrip on is (and how big the BIN file is), this may take a literal minute or 2 to complete. Maybe more for slower systems. APrip is **not using any hardcoded patches, it is using a new more dynamic flexible patching method**.
 
-*	Rip or acquire a CD image of your desired game.
+The first thing to do is to rip and or acquire a CD image of your desired game. Then depending on what protection the game requires, follow the instructions below for either APv1/APv2 or LibCrypt v1/LibCrypt v2.
 
-### For APv1/APv1.5/APv2
+### For APv1/APv2
 
 *	On Linux, execute `./aprip -b <track 01.bin>` in your Terminal. On Windows, execute  `aprip.exe -b <track 01.bin>` in `cmd.exe`. _Replace `<track 01.bin>` with the actual first or only data track from the game you want to patch_.
 
-*	If you see `got APv1 table match` or `got APv2 table match` then congratulations, the game can no longer detect a non-stealth modchip or [modern soft-mod](#modern-soft-mods). _Traditional Swap tricks with APv1.5 or APv2 will still trigger the detection however_.
+*	If you see `got APv1 table match` or `got APv2 table match` then congratulations, the game can no longer detect a non-stealth modchip or [modern soft-mod](#modern-soft-mods). _Traditional Swap tricks with  or APv2 will still trigger the detection however_.
 
 ![Dino Crisis 2 Japan BIN patched](images/dinocrisis2j-patched.png)
 
 ![Ape Escape Japan Rev 1 BIN patched](images/apeescapejr1-patched.png)
 
-### For LibCrypt 2
+### For LibCrypt v1/LibCrypt v2
 
 *	On Linux, execute `./aprip -b <magic word> <track 01.bin>` in your Terminal. On Windows, execute  `aprip.exe -b <magic word> <track 01.bin>` in `cmd.exe`. _Replace `<track 01.bin>` with the actual first or only data track from the game you want to patch_. Replace `<magic word>` with the correct magic word (MW:), which you can find from the [PS1 Custom Patches](https://www.psdevwiki.com/ps3/PS1_Custom_Patches) page on the PS3 Dev Wiki among other places.
 
 *	If you see:
 
-`Detected LibCrypt 2 Anti-Pro Action Replay`
+`Got LibCrypt 2 Anti-Pro Action Replay match`
 
-`Detected LibCrypt 2 Anti-Mod-Chip`
+`Got LibCrypt 2 Anti-Mod-Chip match`
 
-`Detected LibCrypt 2 Magic Word`
+`Got LibCrypt 2 Magic Word match`
 
-then congratulations, the game will work when burned with normal CD burning software.
+Or:
 
-*	Burn the `*.cue` file which corresponds to your patched `<track 01.bin>` file to a CD-R.
+`Got LibCrypt v1 ICEPICK match`
 
-*	Boot your CD-R with any method on your console.
+then congratulations, the game will work when burned to a CD-R with [Standard CD Burning Software](#standard-cd-burning-software).
 
-![Dino Crisis Europe LibCrypt 2 Patched](images/dino-crisis-europe-lc2-patched.png)
+![Dino Crisis Europe LibCrypt v2 Patched](images/dino-crisis-europe-lc2-patched.png)
+
+![MediEvil France LibCrypt v1 patched](images/medievil-france-lc1-patched.png)
 
 ## Generating GameShark Codes
 
@@ -264,10 +272,10 @@ If you timed your memory dump correctly you will see a new GameShark code line (
 
 ## How It Works
 
-### APv1/APv1.5/APv2
+### APv1//APv2
 I noticed in the partial [decompilation](https://github.com/socram8888/tonyhax/blob/master/docs/antipiracy.c) of an APv2 style function that the CD commands used at the heart of all the additional anti-piracy copy protection could be identifiable from memory when the checks are being performed. This turned out to be true for most games.
 
-For APv1/APv1.5 style games, the commands we care about are the 19'04 and 19'05 CD Test commands. These detect non-stealth modchips when used together. MottZilla realized these commands could be replaced by the Pause and Play CD commands and the routine would not trigger the anti-piracy screen of death on APv2, however I found this to not work on APv1 style games (the function gets stuck). APrip instead works by replacing the 19'04 and 19'05 CD Test commands entirely (4 bytes total) in memory with 00 bytes. It's that simple, I found it by guessing if it would work.
+For APv1/ style games, the commands we care about are the 19'04 and 19'05 CD Test commands. These detect non-stealth modchips when used together. MottZilla realized these commands could be replaced by the Pause and Play CD commands and the routine would not trigger the anti-piracy screen of death on APv2, however I found this to not work on APv1 style games (the function gets stuck). APrip instead works by replacing the 19'04 and 19'05 CD Test commands entirely (4 bytes total) in memory with 00 bytes. It's that simple, I found it by guessing if it would work.
 
 For APv2 style games, we have one additional command that we care about. The ReadTOC command. This command is really interesting for a few reasons:
 
@@ -281,9 +289,13 @@ The APv2 style games accommodate for the early Japanese consoles which lack the 
 
 So this is where I tried something. What happens if we replace the first byte of the ReadTOC command with `00` and leave the rest of the bytes relative to it in the AP code alone? 00 would turn ReadToc into effectively the [Sync](https://problemkaputt.de/psx-spx.htm#cdromcontrollercommandsummary) command, which is actually an invalid command that doesn't do what it's supposed to do according to official documentation. Effectively it turns out this seems to trigger the same behavior as if the console was a SCPH-1000 or early SCPH-3000 that lacked the ReadTOC command, bypassing the APv2 code completely!
 
+### LibCrypt v1
+
+I found the [TRSIMEDI patcher by ICEPICK](https://consolecopyworld.com/psx/psx_medievil.shtml) and reverse engineered how it works. I then adapted the patching knowledge into an APrip patching method.
+
 ### LibCrypt v2
 
-Using the functions developed for the intial APv1/APv1.5/APv2 patching, I was easily able to automate the hex editing guide written at the [LibCrypt PS1 Protection Bible By Red-J](https://red-j.github.io/Libcrypt-PS1-Protection-bible/index.htm).
+Using the functions developed for the initial APv1//APv2 patching, I was easily able to automate the hex editing guide written at the [LibCrypt PS1 Protection Bible By Red-J](https://red-j.github.io/Libcrypt-PS1-Protection-bible/index.htm).
 
 ## License
 
