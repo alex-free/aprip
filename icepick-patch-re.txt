@@ -47,7 +47,7 @@ Offset   Old New    Byte at 47 byte match to edit
 1B2D2A9D            41 skip
 1B2D2A9E A4 00      42
 1B2D2A9F 90 00      43
-1B2D2AA0 00 6A      44
-1B2D2AA1 00 D1      45
+1B2D2AA0 00 6A      44 Magic Word byte 2
+1B2D2AA1 00 D1      45 Magic Word byte 1 (D16A = Magic Word)
 1B2D2AA2 00 04      46
 1B2D2AA3 00 24      47 (0x2F byte match)
