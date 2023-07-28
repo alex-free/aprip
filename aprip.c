@@ -29,7 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <string.h>
 
-#define VER "1.0.4"
+#define VER "1.0.5"
 FILE *bin;
 FILE *mem_dump_1;
 FILE *mem_dump_2;
@@ -41,11 +41,8 @@ unsigned int mem_dump_2_size;
 unsigned int current_fpos;
 unsigned int number_of_sectors;
 unsigned int search_size;
-unsigned int valid_mem_dump_size;
-unsigned int gameshark_write_byte_1_address;
-unsigned int gameshark_write_byte_2_address;
-unsigned int gameshark_write_byte_3_address;
-unsigned int gameshark_write_byte_4_address;
+unsigned int valid_mem_dump_size = 0x200000; // The exact file size generated when dumping RAM in the DuckStation emulator.
+unsigned int gameshark_write_byte_address;
 unsigned int get_start_of_pattern_pos;
 
 unsigned char *buf;
@@ -59,8 +56,6 @@ unsigned char sectors[0x1000];
 unsigned char match_pattern[16];
 unsigned char pattern[16];
 
-const unsigned char play = 0x03;
-const unsigned char pause = 0x09;
 const unsigned char sync = 0x00;
 
 const unsigned char medievil_europe_ps_exe [] =  { 0x53, 0x43, 0x45, 0x53, 0x5F, 0x30, 0x30, 0x33, 0x2E, 0x31, 0x31, 0x3B, 0x31}; // SCES_003.11;1
@@ -134,19 +129,6 @@ const unsigned char libcrypt_1_medievil_icepick_based_patch[] = {
 0x00
 }; // 0x2F, 47 bytes
 
-const unsigned char anti_piracy_v1[] = { // The very first anti-piracy code. Found in PopoRogue, Ape Escape, etc. Does only 3 SCEX check for dumb non-stealth modchips.
-    0x01, 0x00, 0x01, 0x03, // GetStat
-    0x07, 0x00, 0x01, 0x03, // Motor on
-    0x02, 0x03, 0x01, 0x03, // SetLoc
-    0x16, 0x00, 0x01, 0x03, // SeekAudio
-    0x0E, 0x01, 0x01, 0x03, // SetMode
-    0x19, 0x01, 0x04, 0x03, // Subfunq X (19'04) //21st
-    0x0B, 0x00, 0x01, 0x03, // Mute
-    0x03, 0x00, 0x01, 0x03, // Play
-    0x19, 0x01, 0x02, 0x03, // Subfunq Y (19'05) //33rd
-    0x09, 0x00, 0x01, 0x03 // Pause
-}; // 40 byte pattern
-
 const unsigned char anti_piracy_v2[] = { // This was first seen in Dino Crisis? Does SCEX/GetTN/GetTD/ReadTOC but is standardized and very easy to bypass. Seems like all games after a certain point began copying in this code to add anti-piracy measures to their product.
     0x01, 0x00, 0x01, 0x03, // GetStat
     0x13, 0x00, 0x03, 0x03, // GetTN
@@ -164,8 +146,9 @@ const unsigned char anti_piracy_v2[] = { // This was first seen in Dino Crisis? 
     0x1A, 0x00, 0x01, 0x05 // GetID
 }; //52 byte pattern
 
-bool matched_anti_piracy_v1;
 bool matched_anti_piracy_v2;
+bool check_for_apv2 = true;
+
 bool last_sector;
 
 bool matched_libcrypt_2_anti_pro_action_replay;
@@ -173,21 +156,15 @@ bool matched_libcrypt_2_anti_mod_chip;
 bool matched_libcrypt_2_magic_word;
 bool matched_libcrypt_2;
 
+bool directory_record_sectors_maybe = true;
+bool libcrypt_1;
+bool matched_libcrypt_1_icepick_based_patch;
 bool matched_libcrypt_1_magic_word;
 bool matched_libcrypt_1_part_2;
 bool matched_libcrypt_1_part_3;
 
-bool directory_record_sectors_maybe = true;
-bool libcrypt_1;
-bool matched_libcrypt_1_icepick_based_patch;
-
-bool check_for_apv2 = true;
-bool check_for_apv1 = true;
-
 void bin_patch_libcrypt(const char **argv)
 {
-    last_sector = 0;
-
     /*
         The AP table could possibly start on the end of a sector and end at the beginning of the next sector. Each RAW sector is 0x930 bytes. The first 0x18 bytes are to be ignored as they are just header data. The next 0x800 bytes contains actual data we want to scan through.
         Start at 0. Skip to 0x18. Read the next 0x800 bytes. Skip to a total of 0x930 bytes (one whole raw sector). Skip 0x18 bytes again and then read the next 0x800 bytes. We now have 2 sectors worth of straight up data in a buffer of 0x1000 bytes
@@ -216,7 +193,13 @@ void bin_patch_libcrypt(const char **argv)
 
     fseek(bin, 0, SEEK_SET);
     buf = (unsigned char *)malloc(bin_size * sizeof(unsigned char)); // Read entire BIN to memory for performance gain, I mean it's 2022 who doesn't have a free ~700MBs of RAM?!
-    fread(buf, bin_size, 1, bin);
+
+    if(fread(buf, 1, bin_size, bin) != bin_size)
+    {
+        printf("Error loading BIN: file: %s\n", argv[2]);
+        return;
+    }
+
     printf("Successfully loaded BIN file: %s (%d bytes in memory)\n", argv[3], bin_size);
     max_size = bin_size;
     number_of_sectors = (bin_size / 2352);
@@ -251,34 +234,6 @@ void bin_patch_libcrypt(const char **argv)
 
         for(int s = 0; s < search_size; s++)
         {
-            if(check_for_apv1)
-            {
-                // APv1/APv1.5
-                matched_anti_piracy_v1 = true;
-                for(int i=0; i < 40; i++)
-                {                
-                    if(anti_piracy_v1[i] != sectors[s + i])
-                    {
-                        if(i != 3 && i != 7 && i != 11 && i != 15 && i != 19 && i != 23 && i != 27 && i != 31 && i != 35 && i != 39) // These bytes could change, they can be 03 or 05 depending on the AP code in the game but the table itself remains consistent besides the value of every 4th byte and the commands are still obvious via this pattern
-                        matched_anti_piracy_v1 = false; 
-                    }
-                }
-
-                if(matched_anti_piracy_v1) 
-                {     
-                    printf("Got anti-piracy v1 table match\n");
-                    sectors[s + 20] = sync; // Replace SubFunq X's bytes with '00' bytes
-                    sectors[s + 21] = sync;
-                    sectors[s + 22] = sync;
-                    sectors[s + 23] = sync;
-
-                    sectors[s + 32] = sync; /// Replace SubFunq Y's bytes with '00' bytes
-                    sectors[s + 33] = sync;
-                    sectors[s + 34] = sync;
-                    sectors[s + 35] = sync;
-                }
-            }
-
             if(check_for_apv2)
             {
                 // APv2
@@ -298,8 +253,6 @@ void bin_patch_libcrypt(const char **argv)
                 if(matched_anti_piracy_v2) 
                 {
                    printf("Got anti-piracy v2 table match\n");
-                    sectors[s + 36] = pause; // Replace SubFunq X's first byte with the Pause command's first byte
-                    sectors[s + 40] = play; // Replace SubFunq Y's first byte with the Play command's first byte
                     sectors[s + 48] = sync; // Replace ReadTOC's first byte with the first byte of the sync command. This seems to trigger the VC0 CDROM Controller BIOS Firmware behavior on all consoles. The VC0 CDROM Controller BIOS firmware does not have the ReadTOC command, it is found in the wild in early SCPH-3000 Japanese consoles and in all SCPH-1000 consoles.
 			    }
             }
@@ -326,7 +279,6 @@ void bin_patch_libcrypt(const char **argv)
             if(libcrypt_1)
             {
                 check_for_apv2 = false;
-                check_for_apv1 = false;
                 matched_libcrypt_1_icepick_based_patch = true;
                 for(int i=0; i < 47; i++)
                 {                
@@ -500,10 +452,8 @@ void bin_patch_libcrypt(const char **argv)
     free(buf);
 }
 
-void bin_patch (const char **argv)
+void bin_patch(const char **argv)
 {
-    last_sector = 0;
-
     /*
         The AP table could possibly start on the end of a sector and end at the beginning of the next sector. Each RAW sector is 0x930 bytes. The first 0x18 bytes are to be ignored as they are just header data. The next 0x800 bytes contains actual data we want to scan through.
         Start at 0. Skip to 0x18. Read the next 0x800 bytes. Skip to a total of 0x930 bytes (one whole raw sector). Skip 0x18 bytes again and then read the next 0x800 bytes. We now have 2 sectors worth of straight up data in a buffer of 0x1000 bytes
@@ -521,7 +471,13 @@ void bin_patch (const char **argv)
     
     fseek(bin, 0, SEEK_SET);
     buf = (unsigned char *)malloc(bin_size * sizeof(unsigned char)); // Read entire BIN to memory for performance gain, I mean it's 2022 who doesn't have a free ~700MBs of RAM?!
-    fread(buf, bin_size, 1, bin);
+    
+    if(fread(buf, 1, bin_size, bin) != bin_size)
+    {
+        printf("Error loading BIN: file: %s\n", argv[2]);
+        return;
+    }
+
     printf("Successfully loaded BIN file: %s (%d bytes in memory)\n", argv[2], bin_size);
     max_size = bin_size;
     number_of_sectors = (bin_size / 2352);
@@ -553,30 +509,6 @@ void bin_patch (const char **argv)
 
         for(int s = 0; s < search_size; s++)
         {
-            matched_anti_piracy_v1 = true;
-            for(int i=0; i < 40; i++)
-            {                
-                if(anti_piracy_v1[i] != sectors[s + i])
-                {
-                    if(i != 3 && i != 7 && i != 11 && i != 15 && i != 19 && i != 23 && i != 27 && i != 31 && i != 35 && i != 39) // These bytes could change, they can be 03 or 05 depending on the AP code in the game but the table itself remains consistent besides the value of every 4th byte and the commands are still obvious via this pattern
-                        matched_anti_piracy_v1 = false; 
-                }
-            }
-
-            if(matched_anti_piracy_v1) 
-            {            
-                printf("Got anti-piracy v1 table match\n");
-                sectors[s + 20] = sync; // Replace SubFunq X's bytes with '00' bytes
-                sectors[s + 21] = sync;
-                sectors[s + 22] = sync;
-                sectors[s + 23] = sync;
-
-                sectors[s + 32] = sync; /// Replace SubFunq Y's bytes with '00' bytes
-                sectors[s + 33] = sync;
-                sectors[s + 34] = sync;
-                sectors[s + 35] = sync;
-            }
-
             matched_anti_piracy_v2 = true;
             for(int i=0; i < 52; i++)
             {                
@@ -593,8 +525,6 @@ void bin_patch (const char **argv)
             if(matched_anti_piracy_v2) 
             {
                 printf("Got anti-piracy v2 table match\n");
-                sectors[s + 36] = pause; // Replace SubFunq X's first byte with the Pause command's first byte
-                sectors[s + 40] = play; // Replace SubFunq Y's first byte with the Play command's first byte
                 sectors[s + 48] = sync; // Replace ReadTOC's first byte with the first byte of the sync command. This seems to trigger the VC0 CDROM Controller BIOS Firmware behavior on all consoles. The VC0 CDROM Controller BIOS firmware does not have the ReadTOC command, it is found in the wild in early SCPH-3000 Japanese consoles and in all SCPH-1000 consoles.
 			}
         }
@@ -626,14 +556,10 @@ void gameshark_gen(const char **argv)
 {
     fseek(mem_dump_1, 0, SEEK_END);
     mem_dump_1_size = ftell(mem_dump_1);
-    fseek(mem_dump_1, 0, SEEK_SET);
-    buf = (unsigned char *)malloc(mem_dump_1_size * sizeof(unsigned char));
-    fread(buf, mem_dump_1_size, 1, mem_dump_1);
-    printf("Loaded mem dump file: %s (%d bytes in memory)\n", argv[2], mem_dump_1_size);
 
     if(mem_dump_1_size != valid_mem_dump_size)
     {
-        printf("Error: the original mem dump file: %s is not the expected size\n", argv[2]);
+        printf("Error: the original RAM dump file: %s is not the expected size\n", argv[2]);
         fclose(mem_dump_1);
         free(buf);
         if(mem_dump_1_size == 8388608)
@@ -641,20 +567,21 @@ void gameshark_gen(const char **argv)
         return;
     }
 
+    fseek(mem_dump_1, 0, SEEK_SET);
+    buf = (unsigned char *)malloc(mem_dump_1_size * sizeof(unsigned char));
+
+    if(fread(buf, 1, mem_dump_1_size, mem_dump_1) != mem_dump_1_size)
+    {
+        printf("Error loading RAM dump file: %s\n", argv[2]);
+        return;
+    }
+    
+    printf("Loaded RAM dump file: %s (%d bytes in memory)\n", argv[2], mem_dump_1_size);
+
     while(1)
     {
         if(current_fpos > valid_mem_dump_size)
             break;
-
-        matched_anti_piracy_v1 = true;
-        for(int i=0; i < 40; i++)
-        {                
-            if(anti_piracy_v1[i] != buf[current_fpos + i])
-            {
-                if(i != 3 && i != 7 && i != 11 && i != 15 && i != 19 && i != 23 && i != 27 && i != 31 && i != 35 && i != 39) // These bytes could change, they can be 03 or 05 depending on the AP code in the game but the table itself remains consistent besides the value of every 4th byte and the commands are still obvious via this pattern
-                    matched_anti_piracy_v1 = false; 
-            }
-        }
 
         matched_anti_piracy_v2 = true;
         for(int i=0; i < 52; i++)
@@ -666,82 +593,20 @@ void gameshark_gen(const char **argv)
             }
         }
           
-        if(matched_anti_piracy_v1)
-        {
-            printf("\nGot anti-piracy v1 table match starting at offset: 0x%08X\n", current_fpos);
-            gameshark_write_byte_1_address = (current_fpos + 20); // SubFunq X (19'04)
-            gameshark_write_byte_2_address = (current_fpos + 22);
+        if(matched_anti_piracy_v2) {
+            printf("Got anti-piracy v2 table match starting at offset: 0x%08X\n", current_fpos);
+            gameshark_write_byte_address = (current_fpos + 48);
 
-            gameshark_write_byte_3_address = (current_fpos + 32); // SubFunq Y (19'05)
-            gameshark_write_byte_4_address = (current_fpos + 34);
-
-            bytes=(unsigned char *)&gameshark_write_byte_1_address;
+            bytes=(unsigned char *)&gameshark_write_byte_address;
             bytes[3] = 0xD0;
-            printf("%08X 0119\n", gameshark_write_byte_1_address); // Look for SubFunq X (first 2 bytes)
-            bytes=(unsigned char *)&gameshark_write_byte_1_address;
+            printf("%08X 001E\n", gameshark_write_byte_address); // Look for ReadTOC command
+            bytes=(unsigned char *)&gameshark_write_byte_address;
             bytes[3] = 0x80;        
-            gameshark_write_byte_1_address = bytes[0] + (bytes[1] << 8) + (bytes[2] << 16) + (bytes[3] << 24); // NOT BIG-ENDIAN SAFE    
-            printf("%08X 0000\n\n", gameshark_write_byte_1_address); // Replace SubFunq X's first 2 bytes with '00's
-
-            bytes=(unsigned char *)&gameshark_write_byte_2_address;
-            last_byte = buf[current_fpos + 23];
-            bytes[3] = 0xD0;
-            printf("%08X %02X04\n", gameshark_write_byte_2_address, last_byte); // Look for SubFunq X (last 2 bytes). The last byte can change, usually it is 0x03 or 0x05. So we get that byte from the mem dump file.
-            bytes=(unsigned char *)&gameshark_write_byte_2_address;
-            bytes[3] = 0x80;        
-            gameshark_write_byte_2_address = bytes[0] + (bytes[1] << 8) + (bytes[2] << 16) + (bytes[3] << 24); // NOT BIG-ENDIAN SAFE    
-            printf("%08X 0000\n\n", gameshark_write_byte_2_address); // Replace SubFunq X's last two bytes with '00's
-
-            bytes=(unsigned char *)&gameshark_write_byte_3_address;
-            bytes[3] = 0xD0;
-            printf("%08X 0119\n", gameshark_write_byte_3_address); // Look for SubFunq Y (first 2 bytes)
-            bytes=(unsigned char *)&gameshark_write_byte_3_address;
-            bytes[3] = 0x80;        
-            gameshark_write_byte_3_address = bytes[0] + (bytes[1] << 8) + (bytes[2] << 16) + (bytes[3] << 24); // NOT BIG-ENDIAN SAFE    
-            printf("%08X 0000\n\n", gameshark_write_byte_3_address); // Replace SubFunq Y's first 2 bytes with '00's
-
-            last_byte = buf[current_fpos + 35];
-            bytes=(unsigned char *)&gameshark_write_byte_4_address;
-            bytes[3] = 0xD0;
-            printf("%08X %02X02\n", gameshark_write_byte_4_address, last_byte); // Look for SubFunq Y (last 2 bytes). The last byte can change, usually it is 0x03 or 0x05. So we get that byte from the mem dump file.
-            bytes=(unsigned char *)&gameshark_write_byte_4_address;
-            bytes[3] = 0x80;        
-            gameshark_write_byte_4_address = bytes[0] + (bytes[1] << 8) + (bytes[2] << 16) + (bytes[3] << 24); // NOT BIG-ENDIAN SAFE    
-            printf("%08X 0000\n\n", gameshark_write_byte_4_address); // Replace SubFunq Y's last 2 bytes with '00's
-
-            current_fpos = (current_fpos + 40); // Skip the next 40 bytes as we already know this is the table
-        } else if(matched_anti_piracy_v2) {
-            printf("\nGot anti-piracy v2 table match starting at offset: 0x%08X\n", current_fpos);
-            gameshark_write_byte_1_address = (current_fpos + 36);
-            gameshark_write_byte_2_address = (current_fpos + 40);
-            gameshark_write_byte_3_address = (current_fpos + 48);
-
-            bytes=(unsigned char *)&gameshark_write_byte_1_address;
-            bytes[3] = 0xD0;
-            printf("%08X 0119\n", gameshark_write_byte_1_address); // Look for 19'04 test command (first 2 bytes)
-            bytes=(unsigned char *)&gameshark_write_byte_1_address;
-            bytes[3] = 0x80;        
-            gameshark_write_byte_1_address = bytes[0] + (bytes[1] << 8) + (bytes[2] << 16) + (bytes[3] << 24); // NOT BIG-ENDIAN SAFE    
-            printf("%08X 0109\n\n", gameshark_write_byte_1_address); // Replace SubFunq X's first byte with the first byte of the Pause command
-
-            bytes=(unsigned char *)&gameshark_write_byte_2_address;
-            bytes[3] = 0xD0;
-            printf("%08X 0119\n", gameshark_write_byte_2_address); // Look for 19'05 test command (first 2 bytes)
-            bytes=(unsigned char *)&gameshark_write_byte_2_address; // Replace SubFunq Y's first byte with the first byte of the Play command
-            bytes[3] = 0x80;        
-            gameshark_write_byte_2_address = bytes[0] + (bytes[1] << 8) + (bytes[2] << 16) + (bytes[3] << 24); // NOT BIG-ENDIAN SAFE    
-            printf("%08X 0103\n\n", gameshark_write_byte_2_address); // Write play command where 19'04 was (changes the first byte only, keep the original second byte).
-
-            bytes=(unsigned char *)&gameshark_write_byte_3_address;
-            bytes[3] = 0xD0;
-            printf("%08X 001E\n", gameshark_write_byte_3_address); // Look for ReadTOC command
-            bytes=(unsigned char *)&gameshark_write_byte_3_address;
-            bytes[3] = 0x80;        
-            gameshark_write_byte_3_address = bytes[0] + (bytes[1] << 8) + (bytes[2] << 16) + (bytes[3] << 24); // NOT BIG-ENDIAN SAFE    
-            printf("%08X 0000\n\n", gameshark_write_byte_3_address); // Write the sync command where ReadTOC was. This seems to trigger the VC0 CDROM Controller BIOS Firmware behavior on all consoles. The VC0 CDROM Controller BIOS firmware does not have the ReadTOC command, it is found in the wild in early SCPH-3000 Japanese consoles and in all SCPH-1000 consoles.
+            gameshark_write_byte_address = bytes[0] + (bytes[1] << 8) + (bytes[2] << 16) + (bytes[3] << 24); // NOT BIG-ENDIAN SAFE    
+            printf("%08X 0000\n", gameshark_write_byte_address); // Write the sync command where ReadTOC was. This seems to trigger the VC0 CDROM Controller BIOS Firmware behavior on all consoles. The VC0 CDROM Controller BIOS firmware does not have the ReadTOC command, it is found in the wild in early SCPH-3000 Japanese consoles and in all SCPH-1000 consoles.
             current_fpos = (current_fpos + 52); // Skip the next 52 bytes as we already know this is the table
         } else {
-            current_fpos++; // Move to next byte to start APv1/APv2 check all over again until EOF
+            current_fpos++; // Move to next byte to start APv2 check all over again until EOF
         }
     }
 
@@ -758,7 +623,7 @@ void sharkconv(const char **argv)
     gameshark_prefix = bytes[3];
     bytes[3] = 0x00; // the 80 or D0 is a prefix for the gameshark code type, the actual memory location is 00 in this part of the address
     gameshark_code_address = bytes[0] + (bytes[1] << 8) + (bytes[2] << 16) + (bytes[3] << 24); // NOT BIG-ENDIAN SAFE
-    printf("Got old game mem dump address %08X\n", gameshark_code_address);
+    printf("Got old game RAM dump address %08X\n", gameshark_code_address);
     unsigned int base_gameshark_code_address = (gameshark_code_address/16); // rounds down, ignores any remainder
     base_gameshark_code_address = (base_gameshark_code_address * 16); // Boom we got the start of the even memory address that the write value is written into
     printf("Got old game ver gameshark code base address %08X\n", base_gameshark_code_address);
@@ -776,20 +641,29 @@ void sharkconv(const char **argv)
     {
         fseek(mem_dump_1, 0, SEEK_END);
         mem_dump_1_size = ftell(mem_dump_1);
-        fseek(mem_dump_1, 0, SEEK_SET);
-        mem_dump_1_buf = (unsigned char *)malloc(mem_dump_1_size * sizeof(unsigned char));
-        fread(mem_dump_1_buf, valid_mem_dump_size, 1, mem_dump_1);
 
         if(mem_dump_1_size != valid_mem_dump_size)
         {
-            printf("Error: the old game ver mem dump file: %s is not the expected size\n", argv[3]);
+            printf("Error: the old game ver RAM dump file: %s is not the expected size\n", argv[3]);
             if(mem_dump_1_size == 8388608)
                 printf("Do you have the 'Enable 8MB RAM' option enabled? Uncheck that option if so and make a new RAM dump\n");
             fclose(mem_dump_1);
             free(mem_dump_1_buf);
             return;
         }
-        printf("Loaded old game ver mem dump file: %s (%d bytes in memory)\n", argv[3], mem_dump_1_size);
+
+        fseek(mem_dump_1, 0, SEEK_SET);
+        mem_dump_1_buf = (unsigned char *)malloc(mem_dump_1_size * sizeof(unsigned char));
+
+        if(fread(mem_dump_1_buf, 1, valid_mem_dump_size, mem_dump_1) != mem_dump_1_size)
+        {
+            printf("Error loading old game ver RAM dump file: %s\n", argv[3]);
+            fclose(mem_dump_1);
+            free(mem_dump_1_buf);
+            return;
+        }
+
+        printf("Loaded old game ver RAM dump file: %s (%d bytes in memory)\n", argv[3], mem_dump_1_size);
     } else {
             printf("Cannot open the old game ver memory dump file: %s\n", argv[3]);
             return;
@@ -799,13 +673,10 @@ void sharkconv(const char **argv)
     {
         fseek(mem_dump_2, 0, SEEK_END);
         mem_dump_2_size = ftell(mem_dump_2);
-        fseek(mem_dump_2, 0, SEEK_SET);
-        mem_dump_2_buf = (unsigned char *)malloc(mem_dump_2_size * sizeof(unsigned char));
-        fread(mem_dump_2_buf, valid_mem_dump_size, 1, mem_dump_2);
 
         if(mem_dump_2_size != valid_mem_dump_size)
         {
-            printf("Error: the new game ver mem dump file: %s is not the expected size\n", argv[4]);
+            printf("Error: the new game ver RAM dump file: %s is not the expected size\n", argv[4]);
             if(mem_dump_2_size == 8388608)
                 printf("Do you have the 'Enable 8MB RAM' option enabled? Uncheck that option if so and make a new RAM dump\n");
             fclose(mem_dump_1);
@@ -814,9 +685,23 @@ void sharkconv(const char **argv)
             free(mem_dump_2_buf);
             return;
         }
-        printf("Loaded new game ver mem dump file: %s (%d bytes in memory)\n", argv[4], mem_dump_2_size);
+
+        fseek(mem_dump_2, 0, SEEK_SET);
+        mem_dump_2_buf = (unsigned char *)malloc(mem_dump_2_size * sizeof(unsigned char));
+
+        if(fread(mem_dump_2_buf, valid_mem_dump_size, 1, mem_dump_2) != mem_dump_2_size)
+        {
+            printf("Error loading old game ver RAM dump file: %s\n", argv[3]);
+            fclose(mem_dump_1);
+            fclose(mem_dump_2);
+            free(mem_dump_1_buf);
+            free(mem_dump_2_buf);
+            return;
+        }
+
+        printf("Loaded new game ver RAM dump file: %s (%d bytes in memory)\n", argv[4], mem_dump_2_size);
     } else {
-        printf("Cannot open the new game ver mem dump file: %s\n", argv[4]);
+        printf("Cannot open the new game ver RAM dump file: %s\n", argv[4]);
         fclose(mem_dump_1);
         free(mem_dump_1_buf);
         return;
@@ -868,14 +753,12 @@ void sharkconv(const char **argv)
 
 int main (int argc, const char * argv[]) 
 {
-    valid_mem_dump_size = 0x200000; // The exact file size generated when dumping RAM in the DuckStation emulator.
-    printf("PSX Anti-Piracy Ripper (APrip) v%s\nBy Alex Free (C)2022-2023\n----------------------------------------\nRest In Pieces PSX Anti-Piracy Detection\n----------------------------------------\n", VER);
+    printf("APrip v%s By Alex Free (C)2022-2023 (3-BSD)\nhttps://alex-free.github.io/aprip\n\n", VER);
 
    if(argc == 3)
     {
         if((strcmp("-b", argv[1])) == 0) {
-        current_fpos = 0;
-        printf("MODE: BIN patcher\n");
+            printf("Mode: BIN patcher (APv2)\n");
             if((bin = fopen(argv[2], "rb+")) != NULL)
             {
                 bin_patch(argv);
@@ -884,13 +767,12 @@ int main (int argc, const char * argv[])
         	   return(1);
             }
         } else if((strcmp("-gs", argv[1])) == 0) {
-            current_fpos = 0; // Start 'fpos' at 0
-            printf("MODE: GameShark anti-piracy bypass code creator\n");
+            printf("Mode: gameShark code generation (APv2)\n");
             if((mem_dump_1 = fopen(argv[2], "rb")) != NULL)
             {
                 gameshark_gen(argv);
             } else {
-                printf("Error: Cannot open the game mem dump file: %s\n", argv[2]);
+                printf("Error: Cannot open the RAM dump file: %s\n", argv[2]);
                 return(1);
             }
         } else {
@@ -899,8 +781,7 @@ int main (int argc, const char * argv[])
         }
     } else if (argc == 4) {
         if((strcmp("-b", argv[1])) == 0) {
-        current_fpos = 0;
-        printf("MODE: BIN patcher (LibCrypt v1/LibCrypt v2)\n");
+        printf("Mode: BIN patcher (LibCrypt v1/LibCrypt v2)\n");
             if((bin = fopen(argv[3], "rb+")) != NULL)
             {
                 bin_patch_libcrypt(argv);
@@ -910,11 +791,10 @@ int main (int argc, const char * argv[])
             }
         }
     } else if (argc == 5) {
-        current_fpos = 0; // Start 'fpos' at 0
-        printf("MODE: GameShark code converter\n");
+        printf("Mode: GameShark code converter\n");
         sharkconv(argv);
     } else {
-        printf("Error: Incorrect number of arguments\nUsage:\n\naprip -b <.bin file>\n(Patch BIN file directly)\n\naprip -b <magic word> <.bin file>\n(Patch BIN file containing LibCrypt 2 protection directly)\n\naprip -gs <unpatched game Duckstation mem dump>\n(Create GameShark anti-piracy bypass code)\n\naprip <old game ver code address (80XXXXXX or D0XXXXXX)> <old game ver code 16-bit write or compare value> <unpatched old game ver Duckstation memory dump> <unpatched new game ver Duckstation memory dump>\n(Convert an existing GameShark code from one revision/version to another of the same game)\n\n");
+        printf("Error: Incorrect number of arguments\nUsage:\n\naprip -b <.bin file>\n(Patch BIN file directly)\n\naprip -b <magic word> <.bin file>\n(Patch BIN file containing LibCrypt 2 protection directly)\n\naprip -gs <unpatched game Duckstation RAM dump>\n(Create GameShark anti-piracy bypass code)\n\naprip <old game ver code address (80XXXXXX or D0XXXXXX)> <old game ver code 16-bit write or compare value> <unpatched old game ver Duckstation memory dump> <unpatched new game ver Duckstation memory dump>\n(Convert an existing GameShark code from one revision/version to another of the same game)\n");
         return(1);
     }  
 }
