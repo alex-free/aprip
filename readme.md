@@ -1,10 +1,12 @@
 # [alex-free.github.io](https://alex-free.github.io)
 
-# APrip: Advanced Generic PSX Anti-Piracy Protection Patcher
+# APrip: PSX Anti-Piracy Protection Bypass Generator
 
 By Alex Free
 
-APrip patches various additional anti-piracy copy protection implementations found in some PSX games released later in the console's lifecycle. APrip patches enable playing such games on unmodified consoles (no mod-chip installed) with a [soft-mod](#soft-mods).
+APrip Bypasses various anti-piracy schemes found in later PSX games with CD image generic patch finder and GameShark code generator functions. It can also convert existing GameShark bypass codes to different revisions of the same game, or a different game in the same series.
+
+It is used as a development aid for the Tonyhax International [anti-piracy bypass system](https://alex-free.github.io/tonyhax-international/anti-piracy-bypass.html), however it includes many features that may be of use to others.
 
 ## Table Of Contents
 
@@ -13,9 +15,6 @@ APrip patches various additional anti-piracy copy protection implementations fou
 *   [Patching The CD Image](#patching-the-cd-image)
 *   [Generating GameShark Codes](#generating-gameshark-codes)
 *   [Converting An Existing GameShark Codes](#converting-an-existing-gameshark-code).
-
-_More Info_
-
 *   [Soft-Mods](#soft-mod)
 *   [How It Works](#how-it-works)
 *   [License](#license)
@@ -34,51 +33,51 @@ _More Info_
 
 ## Downloads
 
-### Version 1.0.5 (7/28/2023)
+### Version 1.0.6 (11/6/2023)
 
-*	[aprip-1.0.5-windows\_x86](https://github.com/alex-free/aprip/releases/download/v1.0.5/aprip-1.0.5-windows_x86.zip) _For Windows 95 OSR 2.5 Or Newer (32-bit Windows)_
-*	[aprip-1.0.5-windows\_x86\_64](https://github.com/alex-free/aprip/releases/download/v1.0.5/aprip-1.0.5-windows_x86_64.zip) _For 64-bit Windows_
-*	[aprip-1.0.5-linux\_x86](https://github.com/alex-free/aprip/releases/download/v1.0.5/aprip-1.0.5-linux_x86_static.zip) _For x86 Linux Distros_
-*	[aprip-1.0.5-linux\_x86\_64](https://github.com/alex-free/aprip/releases/download/v1.0.5/aprip-1.0.5-linux_x86_64_static.zip) _For x86_64 Linux Distros_
-*	[aprip-1.0.5-source](https://github.com/alex-free/aprip/archive/refs/tags/v1.0.5.zip)
+*	[aprip-v1.0.6-windows-x86](https://github.com/alex-free/aprip/releases/download/v1.0.6/aprip-v1.0.6-windows-x86.zip) _For Windows 95 OSR 2.5 Or Newer (32-bit Windows)_
+*	[aprip-v1.0.6-windows-x86\_64](https://github.com/alex-free/aprip/releases/download/v1.0.6/aprip-v1.0.6-windows-x86_64.zip) _For 64-bit Windows_
+*	[aprip-v1.0.6-linux-x86](https://github.com/alex-free/aprip/releases/download/v1.0.6/aprip-v1.0.6-linux-x86_static.zip) _For x86 Linux Distros_
+*	[aprip-v1.0.6-linux-x86\_64](https://github.com/alex-free/aprip/releases/download/v1.0.6/aprip-v1.0.6-linux-x86_64_static.zip) _For x86\_64 Linux Distros_
+*	[aprip-1.0.6-source](https://github.com/alex-free/aprip/archive/refs/tags/v1.0.6.zip)
 
 Changes:
 
-*	Removed broken non-stealth mod-chip APv1/APv2 patching.
+*	Added support for my Zero APv1 bypass for GameShark code generation and CD image BIN file patching.
 
-*   Improved and cleaned up code, enabling build on Pop!OS.
+*   Added support for the Fake PAL APv2 bypass for GameShark code generation and CD image BIN file patching.
 
-*   Added info on [EDC](#edc) Protected games.
+*	Added support for B.A.D's LibCrypt v2 bypass for GameShark code generation and CD image BIN file patching.
 
 [About Previous Versions](changelog.md).
 
 ## Anti-Piracy Implementations
 
-Starting in late 1998, some specific PSX games began implementing additional copy protection designed to prevent playing backup CD-R copies or import discs of said game. Different types of additional copy protection have been found in PSX games over the years.
+Starting in late 1998, some specific PSX games began implementing additional copy protection designed to prevent playing backup CD-R copies or import discs of said game. Different types of additional copy protection have been found in PSX games over the years. Below is more info on the 4 different anti-piracy protection schemes aprip currently supports:
 
 ### APv1
 
-![PoPoRogue Japan Rev 0 APv1 Screen](images/poporogue-japan-rev-0-non-stealth-mod-chip-apv1-triggered.png)
+The very first kind of additional anti-piracy copy protection that appeared was in the Japanese game [PoPoRogue](http://redump.org/disc/1552/). It is only found in various Japanese PSX games, no other region saw any game release with it. 
 
-The very first kind of additional anti-piracy copy protection that appeared was in the Japanese game [PoPoRogue](http://redump.org/disc/1552/). It is only found in various Japanese PSX games, no other region saw any game release with it. This protection only triggers on consoles with a non-stealth mod-chip installed. A non-stealth mod-chip was the first design of PSX mod-chips released. Later 'stealth' mod-chip designs don't trip APv1 protection. Unmodified consoles using a [soft-mod](#soft-mod) or a [traditional swap trick](https://gamefaqs.gamespot.com/ps/916392-playstation/faqs/4708) also don't trip it. **APrip does not support patching APv1 games.**
+Trips non-stealth mod-chip consoles: Yes.
+Trips Unmodified soft-modded consoles: No.
+APrip bypasses For APv1: [Zero Bypass](#zero-bypass).
+
+![PoPoRogue Japan Rev 0 APv1 Screen](images/poporogue-japan-rev-0-non-stealth-mod-chip-apv1-triggered.png)
 
 ### APv2
 
+This protection was first seen in the japanese release of [Dino Crisis](http://redump.org/disc/1598/). It is found in various PSX games spanning every region, not just in Japan like the original APv1 protection was limited to. 
+
+Trips non-stealth mod-chip consoles: Yes.
+Trips Unmodified soft-modded consoles: Yes.
+APrip bypasses for APv2: [Fake PAL BIOS](#fake-pal-bypass) and [Fake VC0](#fake-vc0).
+
 ![Dino Crisis USA Rev 0 APv2 Screen](images/dino-crisis-usa-rev-0-non-stealth-mod-chip-apv2-triggered.png)
-
-This protection was first seen in the japanese release of [Dino Crisis](http://redump.org/disc/1598/). It is found in various PSX games spanning every region, not just in Japan like the original APv1 protection was limited to. This protection is a lot more advanced then it's predecessor, APv1. APv2 triggers on consoles with a non-stealth mod-chip installed like APv1. A non-stealth mod-chip was the first design of PSX mod-chips released. Later 'stealth' mod-chip designs don't trip APv2 protection, just like how they don't trip APv1 protection. But this time it also triggers when using a [traditional swap trick](https://gamefaqs.gamespot.com/ps/916392-playstation/faqs/4708) on unmodified consoles. On all consoles except the SCPH-1000 and early SCPH-3000 models, it also even triggers when booting games containing it with [a soft-mod](#soft-mod).
-
-[CD image patching](#patching-the-cd-image) has a less then 100% success rate for APv2 because some games compress and or obsfucate the vulnerable APv2 code to make it invisible from the CD image.
-
-[GameShark code generation](#generating-gameshark-codes) for APv2 appears to have a 100% success rate with all APv2 games ever released. This is because even if the game compresses and or obfuscates the vulnerable APv2 code, at runtime in RAM it is plain as day and shared between all titles with APv2 protection
-
-APrip generated GameShark codes power the [anti-piracy bypass system](https://alex-free.github.io/tonyhax/anti-piracy-bypass.html) in [Tonyhax International](https://alex-free.github.io/tonyhax), enabling the play of many [games](https://alex-free.github.io/tonyhax-international/anti-piracy-bypass.html#apv2-bypasses).
 
 ### LibCrypt v1
 
-![MediEvil Europe LibCrypt v1 Screen Of Death](images/medievil-europe-lc1-screen.png.png)
-
-This protection is only found in the PAL region releases of [MediEvil](http://redump.org/disc/592/). It does not check for swap tricks, soft-mods, or even non-stealth mod-chips. It only checks for evidence that the running game is a burned backup copy. APrip supports [CD image patching](#patching-the-cd-image) every game disc ever released it:
+The first version of LibCrypt (which prevents backup CD-Rs made with most standard burning programs from working), only found in the PAL region releases of MediEvil, listed below:
 
 *   [MediEvil Europe](http://redump.org/disc/592/)
 *   [MediEvil France](http://redump.org/disc/13389/)
@@ -86,47 +85,15 @@ This protection is only found in the PAL region releases of [MediEvil](http://re
 *   [MediEvil Italy](http://redump.org/disc/29475/)
 *   [MediEvil Spain](http://redump.org/disc/1584/)
 
+APrip bypasses For LibCrypt v1: [Icepick Bypass](#icepick-bypass).
+
+![MediEvil Europe LibCrypt v1 Screen Of Death](images/medievil-europe-lc1-screen.png.png)
+
 ### LibCrypt v2
 
-This is a serious upgrade to LibCrypt v1. Not only does it check for evidence that the running game is a burned backup copy, it checks for [traditional swap trick](https://gamefaqs.gamespot.com/ps/916392-playstation/faqs/4708), [soft-mods](#soft-mod), non-stealth mod-chips, and the presence of a Pro Action Replay cheat device installed to the console. This version of LibCrypt is the most common version of the protection. 
+This is a serious upgrade to LibCrypt v1. Not only does it check for evidence that the running game is a burned backup copy, it checks for non-stealth mod-chips and the presence of a Pro Action Replay cheat device installed to the console. This version of LibCrypt is the most common version of the protection. 
 
-[CD image patching](#patching-the-cd-image) most likely has a less then 100% success rate, but this is neither confirmed or denied yet. If you LibCrypt v2 game can indeed be aprip patched, then even non-stealth mod-chips won't trip the protection (unlike the APv2 patching).
-
-### LibCrypt v3
-
-This upgrade to LibCrypt v2 has all the same protection triggers but the actual code implementation is encrypted. **Aprip does not support patching LibCrypt v3**
-
-### LibCrypt v4
-
-A strange final hurrah for LibCrypt, this version of the protection was only used in the PAL region releases of the game F1 2000. Unlike LibCrypt v3 and LibCrypt v2 it only checks for evidence that the running game is a burned backup copy (much like LibCrypt v1, but with more complex encrypted implementation). It does not check for swap tricks, soft-mods, or even non-stealth mod-chips. **Aprip does not support patching LibCrypt v4**
-
-LibCrypt v4 discs:
-
-*   [F1 2000 PAL Release 1](http://redump.org/disc/4311/).
-*   [F1 2000 PAL Release 2](hhttp://redump.org/disc/48119/).
-
-### EDC
-
-Introduced in the japanese release of the very first [Dance Dance Revolution](http://redump.org/disc/1562/) game for the psx console, EDC protection only checks for evidence that the running game is a burned backup copy (much like LibCrypt v1 and LibCrypt v4).
-
-Use the [EDCRE](https://alex-free.github.io/edcre/#usage) patcher on the CD disc image first and then burn the final CD image to disc in [raw](https://alex-free.github.io/edcre/#burning-edc-protected-psx-games-correctly) to get the EDC protected games working correctly:
-
-*   Dance Dance Revolution ([Japan](http://redump.org/disc/1562/), [USA](http://redump.org/disc/16075/)). _Japan release also has [APv1](#apv1)_
-
-*   Dance Dance Revolution: Best Hits ([Japan](http://redump.org/disc/30601/)). _Also has [APv2](#apv2)_
-
-*   Dance Dance Revolution Konamix ([USA](http://redump.org/disc/1238/)).
-
-*   Dance Dance Revolution Extra Mix ([Japan](http://redump.org/disc/44438/)). _Also has [APv2](#apv2)_
-
-*   Dance Dance Revolution 2nd Remix ([Japan](http://redump.org/disc/9477/)). _Also has [APv2](#apv2)_
-
-
-*   Dance Dance Revolution 3rd Mix ([Japan](http://redump.org/disc/9536/)). _Also has [APv2](#apv2)_
-
-*   Dance Dance Revolution 4th Mix ([Japan](http://redump.org/disc/34157/)). _Also has [APv2](#apv2)_
-
-*   Dance Dance Revolution 5th Mix ([Japan](http://redump.org/disc/34157/)). _Also has [APv2](#apv2)_
+APrip bypasses For LibCrypt v2: [B.A.D Bypass](#bad-bypass).
 
 ## Soft-Mods
 
@@ -142,128 +109,220 @@ These PSX soft-mods are capable of correctly playing APrip [patched BIN+CUE CD i
 
 Out of the above, all except UniROM have anti-piracy bypass systems implemented for at least some games (and dare I say Tonyhax International's supported bypasses are [quite extensive](https://alex-free.github.io/tonyhax-international/anti-piracy-bypass.html#apv2-bypasses)). 
 
-For any games which don't have a bypass implemented, APrip is here to save the day. [Tonyhax International](https://alex-free.github.io/tonyhax-international) even has a [GameShark feature](https://alex-free.github.io/tonyhax-international/gameshark-code-support.html) that allows you to use [APrip generated GameShark codes](#generating-gameshark-codes). 
+For any games which don't have a bypass implemented, APrip is here to save the day. [Tonyhax International](https://alex-free.github.io/tonyhax-international) even has a [GameShark feature](https://alex-free.github.io/tonyhax-international/gameshark-code-support.html) that allows you to use [APrip generated GameShark codes](#generating-gameshark-codes).
+
+There are no guarantees that aprip bypasses will work on something like the PSX Change v2, Swap Magic Disc, or similar due to those not updating TOC data before booting the discs.
+
+Besides the Fake VC0 Bypass, all other bypasses do support non-stealth mod-chip consoles.
 
 ## Patching The CD Image
 
-APrip can take some time to patch a BIN file as it has to scan the entire file. Depending on how fast the computer you run APrip on is (and how big the BIN file is), this may take a literal minute or 2 to complete. Maybe more for slower systems.
+APrip can patch the CD image BIN file, as long as the protection is not obfuscated by compression or encryption. If you are unable to patch the CD image you should try generating [Gameshark codes](#generating-gameshark-codes), which work around any such obfuscation entirely.
 
-The first thing to do is to rip and or acquire a CD image of your desired game. Then depending on what protection the game requires, follow the instructions below for either APv2 or LibCrypt v1/LibCrypt v2.
+CD image is slow as it has to scan the entire file for the various protections. Depending on how fast the computer you run APrip on is (and how big the BIN file is), this may take a literal minute or 2 to complete. Maybe more for slower systems.
 
-### For APv2
+The first thing to do is to rip and or acquire a CD image of your desired game using any CD ripping software of your choice. Then depending on what protection the game requires, follow the instructions below for either APv2 or LibCrypt v1/LibCrypt v2.
 
-*	On Linux, execute `./aprip -b <track 01.bin>` in your Terminal. On Windows, execute  `aprip.exe -b <track 01.bin>` in `cmd.exe`. _Replace `<track 01.bin>` with the actual data track from the game you want to patch_.
+### For APv1 or APv2
 
-*	If you see `got APv2 table match` then congratulations, the game now works with unmodified consoles using [soft-mod](#soft-mod).
+*	On Linux, execute `./aprip -b <track 01.bin>` in your Terminal. On Windows, execute  `aprip.exe -b <track 01.bin>` in `cmd.exe`/Windows Terminal. 
 
-![Dino Crisis 2 Japan BIN patched](images/dinocrisis2j-patched.png)
+Replace `<track 01.bin>` with the actual first or only track of the cd image ripped from the game you want to patch_.
+
+Make sure you get at least one match for the [Zero Bypass](#zero-bypass), the [Fake VC0 Bypass](#fake-vc0), or the [Fake PAL Bypass](#fake-pal-bypass). If you didn't get any match then aprip can't patch the disc image of the game. It might be able to generate [GameShark codes](#generating-gameshark-codes) however.
+
+![Ape Escape Europe Disc Image Patched](images/ape-escape-europe-disc-image-patched.png)
+
+![Dino Crisis 2 Japan BIN patched](images/dino-crisis-2-japan-disc-image-patched.png)
 
 ### For LibCrypt v1/LibCrypt v2
 
-*	On Linux, execute `./aprip -b <magic word> <track 01.bin>` in your Terminal. On Windows, execute  `aprip.exe -b <magic word> <track 01.bin>` in `cmd.exe`. _Replace `<track 01.bin>` with the actual data track from the game you want to patch_. Replace `<magic word>` with the correct magic word (MW:), which you can find from the [PS1 Custom Patches](https://www.psdevwiki.com/ps3/PS1_Custom_Patches) page on the PS3 Dev Wiki among other places.
+Make sure you Enable the `Allow Booting Without SBI File` if your going to be testing your patched disc image in DuckStation.
 
-*	If you see:
+![Duckstation changed settings](images/duckstation-changed-settings.png)
 
-`Got LibCrypt 2 Anti-Pro Action Replay match`
+On Linux, execute `./aprip -b <magic word> <track 01.bin>` in your Terminal. On Windows, execute  `aprip.exe -b <magic word> <track 01.bin>` in `cmd.exe`/Windows Terminal. 
 
-`Got LibCrypt 2 Anti-Mod-Chip match`
+Replace `<track 01.bin>` with the actual first or only track of the cd image ripped from the game you want to patch. 
 
-`Got LibCrypt 2 Magic Word match`
+Replace `<magic word>` with the correct magic word (MW:), which you can find from the [PS1 Custom Patches](https://www.psdevwiki.com/ps3/PS1_Custom_Patches) page on the PS3 Dev Wiki among other places.
 
-Or:
+Make sure you get a match for the [ICEPICK Bypass](#icepick-bypass) or the [B.A.D Bypass](#bad-bypass). If you didn't get any match then aprip can't patch the disc image of the game. It might be able to generate [GameShark codes](#generating-gameshark-codes) however.
 
-`Got LibCrypt v1 ICEPICK match`
+![Parasite Eve LibCrypt v2 Patched](images/parasite-eve-2-europe-disc-1-cd-image-patched.png)
 
-then congratulations, the game will work with unmodified consoles using a [soft-mod](#soft-mods) or even a non-stealth mod-chipped console.
-
-![Dino Crisis Europe LibCrypt v2 Patched](images/dino-crisis-europe-lc2-patched.png)
-
-![MediEvil France LibCrypt v1 patched](images/medievil-france-lc1-patched.png)
+![MediEvil France LibCrypt v1 patched](images/medievil-france-disc-image-patched.png)
 
 ## Generating GameShark Codes
 
-Instead of patching the BIN file of the CD image directly (or if you have a real import PSX disc), you can generate GameShark codes to do the same thing as a CD image patching. GameShark code generation has a seemingly 100% success rate, and works when [CD image patching](#patching-the-cd-image) doesn't.
+Instead of patching the BIN file of the CD image directly (or if you have a real import PSX disc), you can generate GameShark codes to do the same thing. GameShark code generation more reliably finds bypasses due to some CD images obfuscating the protection by compression or encryption, which isn't a problem at run time. First, You'll need the download the [DuckStation](https://github.com/stenzek/duckstation/releases) emulator and change some of the default options. 
 
-You'll need the download the [DuckStation](https://github.com/stenzek/duckstation/releases) emulator. Start the emulator and navigate to the `Advanced` Settings pane. Change your settings pane so it looks like this image below:
+### DuckStation Configuration
 
-![Duckstation settings](images/duckstation-settings.png)
+Start the emulator and navigate to the `Advanced` Settings pane.
 
-Also, ensure that the _Enable 8MB RAM_ option is **left untouched** as shown in the image below:
+![Duckstation open settings](images/duckstation-open-settings.png)
+
+![Duckstation default settings](images/duckstation-default-settings.png)
+
+Change your settings pane so it looks like this image below:
+
+1) Log Level to `Developer`.
+2) Enable `Log To System Console`.
+3) Enable `Log To Debug Console`.
+4) Enable `Log To File`.
+5) Scroll down in the `Tweaks/Hacks` section and enable `Allow Booting Without SBI File`.
+6) Enable `Show Debug Menu` (if not already enabled).
+
+![Duckstation changed settings](images/duckstation-changed-settings.png)
+
+Also, ensure that the _Enable 8MB RAM_ option is **left untouched** (which is the default) as shown in the image below:
 
 ![Duckstation RAM settings](images/duckstation-ram-settings.png)
 
-Now you can generate some GameShark codes with APrip:
+For APv1/APv2 games, make sure you have a Japanese or USA BIOS selected. For LibCrypt make sure you have a European BIOS selected. I also recommend to enable the `Fast Boot` option.
 
-*	Rip or acquire a CD image of your desired game.
+![DuckStation BIOS Settings](images/duckstation-bios-settings.png)
 
-*	On Linux, execute `./ap-type-checker.sh <duckstation executable> <game cue file>` in your Terminal. On Windows, execute `ap-type-checker.bat <duckstation executable> <game cue file>`. Replace `<duckstation executable>` with the actual file path of the DuckStation executable. Replace `<game cue file>` with the target game's cue file that contains additional anti-piracy copy protection.
+Last, make sure you disable the Save State On Shutdown option, to make sure you don't later interfere with testing your bypasses:
 
-*	**Monitor the terminal, when you see the yellow text `as it is a data sector and we're not reading` immediately pause emulation and dump the memory to a file** as the anti-piracy code has begun running at that time.
+![DuckStation Save State Setting](images/duckstation-save-state-setting.png)
 
-*	On Linux, execute `./aprip -gs <path to mem dump file>` in your Terminal. On Windows, execute `aprip.exe -gs <path to mem dump file>` in `cmd.exe`. Replace `<path to mem dump file` with the actual file path to the memory dump from DuckStation. If you timed your memory dump correctly you will see GameShark codes generated by the output of APrip.
+### Dumping The RAM
+
+For Linux, execute `./ap-type-checker.sh <DuckStation executable> <game cue file>` in your Terminal. For Windows, execute `ap-type-checker.bat <DuckStation executable> <game cue file>` in your `cmd.exe`/Windows Terminal. 
+
+Replace `<DuckStation executable>` with the actual file path of the DuckStation executable. 
+
+Replace `<game cue file>` with the target game's cue file that contains additional anti-piracy copy protection.
 
 ![Dino Crisis USA Rev 0 AP Type Checker](images/ap-type-checker-dino-crisis-usa-rev-0.png)
 
-![Dino Crisis USA Rev 0 AP Type Checker Dump RAM](images/ap-type-checker-dino-crisis-usa-rev-0-dump-ram.png)
+![Dino Crisis USA Rev 0 AP Type Checker](images/ap-type-checker-resident-evil-3-germany.png)
 
-![Dino Crisis USA Rev 0 AP Type Checker Dump RAM Part 2](images/ap-type-checker-dino-crisis-usa-rev-0-dump-ram-2.png)
+This will launch DuckStation with your game. If you are using a LibCrypt title, you'll need to confirm that you do want to boot the game without the SBI file:
+
+![DuckStation Confirm No SBI](images/duckstation-confirm-no-sbi.png)
+
+Now with the game running, you need to figure out at what point that the protection is executed, and then you need to pause the emulation (use the space key). For LibCrypt v1, this is during the loading of the Hilltop Mausoleum level. For LibCrypt v2, APv1, and APv1 this various widely. Most APv2 and APv1 games however run the protection shortly after execution. The good news is (for APv1/APv2) you can see this protection being ran by monitoring the terminal, when you see the yellow text `as it is a data sector and we're not reading` immediately pause emulation and dump the memory to a file as the anti-piracy code has begun running at that time. For LibCrypt v2, you'll need to figure out the effects that the protection triggers (and when they start), which are game specific. This is usually evident by a ton of `CDROM GetlocP` commands being sent in succession. The key part is to dump the RAM as soon as the protection begins to execute.
+
+![Dino Crisis USA Rev 0 AP Type Checker Dump RAM](images/dino-crisis-usa-rev-0-ram-dump.png)
+
+![Resident Evil 3 Germany AP Type Checked Dump RAM](images/resident-evil-3-germany-dump-ram.png)
+
+### Using The RAM Dump
+
+For APv1/APv2 on Linux, execute `./aprip -gs <path to mem dump file>` in your Terminal. For APv1/APv2 On Windows, execute `aprip.exe -gs <path to mem dump file>` in `cmd.exe`/Windows Terminal. 
+
+For LibCrypt v1/LibCrypt v2 on Linux, execute `./aprip -gs <path to mem dump file> <magic word>` in your Terminal. For LibCrypt v1/LibCrypt v2 On Windows, execute `aprip.exe -gs <path to mem dump file> <magic word>` in `cmd.exe`/Windows Terminal.
+
+Replace `<path to mem dump file` with the actual file path to the memory dump taken with DuckStation. If you timed your memory dump correctly you will see GameShark codes generated by the output of APrip.
+
+Replace `<magic word>` with the correct magic word (MW:), which you can find from the [PS1 Custom Patches](https://www.psdevwiki.com/ps3/PS1_Custom_Patches) page on the PS3 Dev Wiki among other places.
 
 ![Dino Crisis USA Rev 0 Code Generation](images/dino-crisis-usa-rev-0-code-generation.png)
 
+![Resident Evil 3 Germany Code Generation](images/resident-evil-3-germany-code-generation.png)
+
+DuckStation has built in cheat code support that you can use to test your generated bypass. [Tonyhax International](https://alex-free.github.io/tonyhax-international) also has a [GameShark feature](https://alex-free.github.io/tonyhax-international/gameshark-code-support.html) you can use for real hardware. 
+
 ## Converting An Existing GameShark Code
 
-If you have an existing code in this format:
+[Back in the day](https://consolecopyworld.com/psx/psx_game_codes.shtml) GameShark codes to bypass additional anti-piracy copy protection were usually only made for a single revision/version of a game. Using APrip, you can most likely port that the GameShark code code to a different version of a game (think a Demo version, Greatest Hits version, or different regional release). Sometimes even a GameShark code for the sequel or prequel of the game with an existing code can be ported.
 
-`D0XXXXXX YYYY`
+The example usage below will explain how the existing Biohazard 3: The Last Escape [Japan Rev 0](http://redump.org/disc/10/) version [GameShark code](https://consolecopyworld.com/psx/psx_game_codes_b.shtml) can be converted/ported by APrip for the Biohazard 3: The Last Escape [Japan Demo](http://redump.org/disc/11674/) version.
 
-`80XXXXXX YYYY`
+*	On Linux, execute `./ap-type-checker.sh <DuckStation executable> <game cue file>` in your Terminal. On Windows, execute `ap-type-checker.bat <duckstation executable> <game cue file>` in `cmd.exe` or the Windows terminal. 
 
-And the string of `X`'s in the GameShark code is the same in both the `DO` and `80` lines of the code then you can convert the code to different releases/versions of the same game. This is useful because [back in the day](https://consolecopyworld.com/psx/psx_game_codes.shtml) GameShark codes to bypass additional anti-piracy copy protection were _usually only made for a single version and or the first release of a game_. There is a chance that the same GameShark code code will work with a different version of a game (think a Demo version, Greatest Hits version, or different regional release) but it is certainly not always the case.
+Replace `<DuckStation executable>` with the actual file path of the DuckStation executable. 
 
-The example usage below will explain how the existing Biohazard 3: The Last Escape [Japan Rev 0](http://redump.org/disc/10/) version [code](https://consolecopyworld.com/psx/psx_game_codes_b.shtml) which _completely skips the additional anti-piracy copy protection_ (making it in fact superior to the code generated by APrip since this shortens the load time that would normally occur during the additional anti-piracy copy protection _and_ enables non-stealth mod-chipped consoles to play the game) can be converted by APrip to work on the Biohazard 3: The Last Escape [Japan Demo](http://redump.org/disc/11674/) version.
+Replace `<game cue file>` with the game the existing GameShark code is for.
 
-*	Rip or acquire a CD image of 2 different versions of a game (i.e, BioHazard 3: The Last Escape [Japan Rev 0](http://redump.org/disc/10/) and [Japan Demo](http://redump.org/disc/11674/)).
+![AP Type Checker Resident Evil 3 Japan](images/ap-type-checker-resident-evil-3-japan.png)
 
-*	On Linux, execute `./ap-type-checker.sh <duckstation executable> <game cue file>` in your Terminal. On Windows, execute `ap-type-checker.bat <duckstation executable> <game cue file>`. Replace `<duckstation executable>` with the actual file path of the DuckStation executable. Replace `<game cue file>` with the actual game's cue file (do the version of the game you have a code for first) that contains additional anti-piracy copy protection. 
+Monitor the terminal, when you see the yellow text `as it is a data sector and we're not reading` immediately pause emulation and dump the memory to a file, as is done in [GameShark Code Generation](#generating-gameshark-codes).
 
-*	**Monitor the terminal, when you see the yellow text `as it is a data sector and we're not reading` immediately pause emulation and dump the memory to a file**. This timing can vary however depending on the game or code, although the above method is very reliable. As seen below, the timing doesn't have to be super precise for Biohazard 3.
+![Resident Evil 3 Japan Rev 0 Dump RAM](images/resident-evil-3-japan-rev-0-dump-ram.png)
 
-*	Once you have dumped the RAM for the version of the game you have a code for, do the exact same _but for the game version you don't have a code for_. You should now have 2 memory dump files.
+Once you have dumped the RAM for the version of the game you have a code for, repeat the exact same process for the version of the game you are converting/porting the GameShark code to.
 
-*	The code we know is for Biohazard 3 Japan Rev 0, which is: [D01840E2 1040 801840E2 1000](https://consolecopyworld.com/psx/psx_game_codes_b.shtml). The first line of the code is the one that is to be input to APrip.
+![AP Type Checker Resident Evil 3 Japan Demo](images/ap-type-checker-resident-evil-3-japan-demo.png)
 
-*	On Linux for this example, execute `./aprip D01840E2 1040 <path to old game ver mem dump> <path to new game ver mem dump>` in your Terminal. On Windows, execute `aprip.exe D01840E2 1040 <path to old game ver mem dump> <path to new game ver mem dump>` in `cmd.exe`. Replace `<path to old game ver mem dump>` with the memory dump file from the version of the game you know the code for. Replace `<path to new game ver mem dump>` with the memory dump fiel from the version of the game you don't know/have a code for (yet). 
+![Resident Evil 3 Japan Demo Dump RAM](images/resident-evil-3-japan-demo-dump-ram.png)
 
-If you timed your memory dump correctly you will see a new GameShark code line (for the version of the game you didn't have a code for) generated by the output of APrip. _It can be tricky to time this right, you may want to try dumping the memory in Duckstation just a little bit before you see the ReadTOC command being sent in the console log if you can't get codes to generate_.
+In this example, the GameShark code we know for Biohazard 3 Japan Rev 0 is: [D01840E2 1040 801840E2 1000](https://consolecopyworld.com/psx/psx_game_codes_b.shtml). The first line of the code is the one that is to be input to APrip, as the APrip conversion feature requires a D0XXXXXX YYYY type code.
 
-![AP Type Checker - BioHazard 3: The Last Escape Japan Rev 0](images/ap-type-checker-biohazard3jr0.png)
+On Linux for this example, execute `./aprip D01840E2 1040 <DuckStation memory dump, taken at time of protection execution for the existing game> <DuckStation memory dump, taken at time of protection execution, for the new game you need the code for> 14` in your Terminal. 
 
-![BioHazard 3: The Last Escape Japan Rev 0 dump RAM](images/biohazard3jr0-dump-ram.png)
+On Windows, execute `aprip.exe D01840E2 1040 <DuckStation memory dump, taken at time of protection execution for the existing game> <DuckStation memory dump, taken at time of protection execution, for the new game you need the code for> 14`. 
 
-![AP Type Checker - BioHazard 3: The Last Escape Japan Demo](images/ap-type-checker-biohazard3jdemo.png)
+Replace `<DuckStation memory dump, taken at time of protection execution for the existing game>` with the memory dump file from the version of the game you know the GameShark code for. 
 
-![BioHazard 3: The Last Escape Japan Demo dump RAM](images/biohazard3jdemo-dump-ram.png)
+Replace `<DuckStation memory dump, taken at time of protection execution, for the new game you need the code for>` with the memory dump of the version of the game you are converting/porting the existing GameShark code to. 
 
-![BioHazard 3: The Last Escape Japan Demo code conversion](images/biohazard3jdemo-code-conversion.png)
+The `14` is the verbosity of the pattern match. In simplest terms, if you are not getting any GameShark code generated lower this number and try again until you do (or don't, if the protection code is changed enough between games). If you are getting multiple GameShark codes being generated for the conversion, raise this number until you get only one match. If you can't get only one match, you'll need to do some trial and error testing to see which GameShark code actually does what you want for the target game.
+
+![Resident Evil 3 Japan To Japan Demo Conversion](images/resident-evil-3-japan-to-japan-demo-conversion.png)
+
+So in this example, we took the Resident Evil 3 Japan code:
+
+`D01840E2 1040` 
+`801840E2 1000`
+
+and were able to get a working code for Resident Evil 3 Japan Demo:
+
+`D01800E2 1040` 
+`801800E2 1000`
+
+The following `80XXXXXX` `YYYY` line should be obvious to figure out from the original code.
+
+## APrip Bypasses
+
+### Zero Bypass
+
+If you see `Got APv1 Zero bypass (By Alex Free) match` then the game should work now work even with a non-stealth mod-chip. The Zero Bypass only works for the earliest APv1 games however.
+
+### Fake VC0
+
+If you see `Got APv2 Fake VC0 bypass (By Alex Free) match` then the game for sure 100% works if your console doesn't have a non-stealth mod-chip and your using a soft-mod. The Fake VC0 bypass is found in all APv2 games, but it doesn't bypass enough of the protection to make non-stealth mod-chip consoles work.
+
+### Fake PAL Bypass
+
+If you see `Got APv2 Fake PAL bypass (By Alex Free & MottZilla) match` then the game will now most likely work on both non-stealth mod-chip and unmodified consoles. Only a few games don't have this bypass, or have the bypass but it doesn't work.
+
+### ICEPICK Bypass
+
+If you see `Got LibCrypt v1 bypass match (By ICEPICK)`  then you have some PAL release of MediEvi. This bypass allows the game to be burned with any standard CD burning software using just the cue file. This bypass has 100% compatibility with all game discs containing LibCrypt v1.
+
+### B.A.D Bypass
+
+If you see `Got LibCrypt v2 bypass match (By B.A.D)`  then you have some a PAL game containing LibCrypt v2 protection, which is the most common version of LibCrypt. This bypass allows the game to be burned with any standard CD burning software using just the cue file. It also allows for use with non-stealth mod-chip consoles. This bypass should have quite high compatibility if the game is LibCrypt v2.
 
 ## How It Works
 
-### APv2
+### APv1 Zero Bypass
+
+I found that zeroing out the `19'04` and `19'05` CDROM test commands meant that for the earliest APv1 games (PoPoRoGue Japan, Ape Escape Japan, Final Fantasy VIII, Pocket MuuMuu) they were never sent. The protection doesn't even check if they were sent and responded as expected for these early games, allowing this to work.
+
+### APv2 Fake VC0 Bypass
 
 I noticed in the partial [decompilation](https://github.com/socram8888/tonyhax/blob/master/docs/apv2.c) of an APv2 style function that the CD commands used  could be identifiable from memory when the checks are being performed. This turned out to be true for seemingly every release APv2 game. 
 
 In the APv2 code, the ReadTOC command is the one that prevents [soft-mods](#soft-mods) from playing games on unmodified consoles. ReadTOC was added in the VC1A CDROM controller firmware, and is present in all but the SCPH-1000 and early SCPH-3000 consoles (which use VC0A or VC0B CDROM controller firmware). ReadTOC is really interesting because it resets the CD drive authentication/licensed disc status, which before it's introduction could only be done when the CD drive door is physically opened. ReadTOC was actually added to the boot sequence of all consoles starting in late 1995 (which have at least BIOS v2.1 and CDROM firmware VC1B) to patch the [CD Player Swap Trick](https://alex-free.github.io/tonyhax-international/#boot-cd) and to make other [traditional swap trick](https://gamefaqs.gamespot.com/ps/916392-playstation/faqs/4708) either impossible or much more involved to pull off. In later PSX games ReadTOC is ran in game-code to detect unlicensed discs after game boot for additional verification.
 
-
 APv2 protected games do accommodate for the SCPH-1000 and early SCPH-3000 consoles which lack the ReadTOC command due to the CDROM controller firmware versions in these consoles being shipped before it's introduction. From my understanding, this semi-discreet line of decompiled [code](https://github.com/alex-free/tonyhax/blob/d8f5c5fe4171ecb24a0522bac60b879a2deca4d3/docs/antipiracy.c#L109) is what triggers if the ReadTOC command does not exist. What happens is essentially a fail-safe, the code immediately returns 0 and exits out of the function. **Now this is really interesting**, because this means that if the TOC is correct (which [soft-mods](#soft-mods) guarantee), then the AP function will always pass, no patching required. And it's true, you can literally any PSX game with APv2 protection and it will **just work** on these early consoles. So this is where I tried something. What happens if we replace the first byte of the ReadTOC command with `00` and leave the rest of the bytes relative to it in the AP code alone? 00 would turn ReadToc into effectively the [Sync](https://problemkaputt.de/psx-spx.htm#cdromcontrollercommandsummary) command, which is actually an invalid command that doesn't do what it's supposed to do according to official documentation. Effectively it turns out this seems to trigger the same behavior as if the console was a SCPH-1000 or early SCPH-3000 that lacked the ReadTOC command, bypassing the APv2 code completely for all unmodified console models.
 
-### LibCrypt v1
+### APv2 Fake PAL Bypass
 
-I found the [TRSIMEDI patcher by ICEPICK](https://consolecopyworld.com/psx/psx_medievil.shtml) and reverse engineered how it works. I then adapted the patching knowledge into an APrip patching method.
+Many games that got a PAL region release contain code in even the USA/Japanese releases which when detecting a PAL BIOS they disable the protection completely. This can be easily faked to always detect a PAL BIOS and therefore never run the protection on any console.
 
-### LibCrypt v2
+### LibCrypt v1 ICEPICK Bypass
 
-Using the functions developed for the initial APv1//APv2 patching, I was easily able to automate the hex editing guide written at the [LibCrypt PS1 Protection Bible By Red-J](https://red-j.github.io/Libcrypt-PS1-Protection-bible/index.htm).
+I found the [TRSIMEDI patcher by ICEPICK](https://consolecopyworld.com/psx/psx_medievil.shtml) and reverse engineered how it works.
+
+### LibCrypt v2 B.A.D Bypass
+
+I was able to automate the hex editing guide written at the [LibCrypt PS1 Protection Bible By Red-J](https://red-j.github.io/Libcrypt-PS1-Protection-bible/index.htm).
 
 ## License
 
@@ -271,7 +330,7 @@ APrip is released as open source software under the 3-BSD license. Please see th
 
 ## Credits
 
-*   [MottZilla](https://github.com/mottzilla) for guidance in developing the CD patcher methods.
+*   [MottZilla](https://github.com/mottzilla) for guidance in developing the CD patcher methods. Also co-developed the [Fake PAL Bypass](#fake-pal-bypass), after [FlareRez](https://gbatemp.net/threads/aprip-patch-out-additional-anti-piracy-copy-protection-found-in-some-later-psx-games.621366/page-2#post-10244014) pointed out the PAL console behavior to me.
 
 *	[Socram8888](https://github.com/socram8888) did the the partial [decompilation](https://github.com/socram8888/tonyhax/blob/master/docs/apv2.c) of the APv2 anti-piracy function, found in the docs folder of the original [Tonyhax](https://github.com/socram8888/). This enabled me to develope aprip's APv2 bypass for unmodified consoles.
 
