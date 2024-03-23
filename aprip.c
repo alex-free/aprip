@@ -1,6 +1,6 @@
 /*
 BSD 3-Clause License
-Copyright (c) 2022-2023, Alex Free
+Copyright (c) 2022-2024, Alex Free
 All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -29,7 +29,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <string.h>
 
-#define VER "1.0.6"
 FILE *bin;
 FILE *mem_dump_1;
 FILE *mem_dump_2;
@@ -1349,7 +1348,7 @@ void sharkconv(const char **argv)
 
 int main (int argc, const char * argv[]) 
 {
-    printf("APrip v%s By Alex Free (C)2022-2023 (3-BSD)\nhttps://alex-free.github.io/aprip\n\n", VER);
+    printf("APrip %s By Alex Free (C)2022-2024 (3-BSD)\nhttps://alex-free.github.io/aprip\n\n", VERSION);
 
     if(argc == 3)
     {

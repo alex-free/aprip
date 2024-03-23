@@ -1,0 +1,6 @@
+Package: aprip
+Version: 1.0.7
+Maintainer: Alex Free
+Architecture: amd64
+Homepage: https://alex-free.github.io/aprip
+Description:  PSX Anti-Piracy Protection Bypass Generator.
