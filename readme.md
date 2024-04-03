@@ -1,8 +1,6 @@
-# [alex-free.github.io](https://alex-free.github.io)
-
 # APrip: PSX Anti-Piracy Protection Bypass Generator
 
-By Alex Free
+_By Alex Free_
 
 APrip Bypasses various anti-piracy schemes found in later PSX games with CD image generic patch finder and GameShark code generator functions. It can also convert existing GameShark bypass codes to different revisions of the same game, or a different game in the same series.
 

@@ -12,7 +12,7 @@ WINDOWS_X86_64_RELEASE_NAME_SUFFIX=windows-x86_64-static
 # Release file format is $(RELEASE_BASE_NAME)-$(VERSION)-$(RELEASE_NAME_SUFFIX)
 
 # Files included in all portable releases (.zip)
-RELEASE_FILES=images readme.md changelog.md license.txt
+RELEASE_FILES=images readme.md changelog.md license.md
 # OPTIONAL: files included only in the Linux portable releases (.zip)
 LINUX_SPECIFIC_RELEASE_FILES=cd-command-logger.sh ap-type-checker.sh
 # OPTIONAL: files included only in the Windows portable releases (.zip)
