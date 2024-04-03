@@ -72,11 +72,11 @@ const unsigned char anti_piracy_v1[] = { // The very first anti-piracy code. Fou
     0x09, 0x00, 0x01, 0x03 // Pause
 }; // 40 byte pattern
 
-const unsigned char medievil_europe_ps_exe [] =  { 0x53, 0x43, 0x45, 0x53, 0x5F, 0x30, 0x30, 0x33, 0x2E, 0x31, 0x31, 0x3B, 0x31}; // SCES_003.11;1
-const unsigned char medievil_france_ps_exe [] =  { 0x53, 0x43, 0x45, 0x53, 0x5F, 0x30, 0x31, 0x34, 0x2E, 0x39, 0x32, 0x3B, 0x31}; // SCES_014.92;1
-const unsigned char medievil_germany_ps_exe [] = { 0x53, 0x43, 0x45, 0x53, 0x5F, 0x30, 0x31, 0x34, 0x2E, 0x39, 0x33, 0x3B, 0x31}; // SCES_014.93;1
-const unsigned char medievil_italian_ps_exe [] = { 0x53, 0x43, 0x45, 0x53, 0x5F, 0x30, 0x31, 0x34, 0x2E, 0x39, 0x34, 0x3B, 0x31}; // SCES_014.94;1
-const unsigned char medievil_spain_ps_exe [] =   { 0x53, 0x43, 0x45, 0x53, 0x5F, 0x30, 0x31, 0x34, 0x2E, 0x39, 0x35, 0x3B, 0x31}; // SCES_014.95;1
+const unsigned char medievil_europe_ps_exe [] =  { 0x53, 0x43, 0x45, 0x53, 0x5F, 0x30, 0x30, 0x33, 0x2E, 0x31, 0x31, 0x3B, 0x31 }; // SCES_003.11;1
+const unsigned char medievil_france_ps_exe [] =  { 0x53, 0x43, 0x45, 0x53, 0x5F, 0x30, 0x31, 0x34, 0x2E, 0x39, 0x32, 0x3B, 0x31 }; // SCES_014.92;1
+const unsigned char medievil_germany_ps_exe [] = { 0x53, 0x43, 0x45, 0x53, 0x5F, 0x30, 0x31, 0x34, 0x2E, 0x39, 0x33, 0x3B, 0x31 }; // SCES_014.93;1
+const unsigned char medievil_italian_ps_exe [] = { 0x53, 0x43, 0x45, 0x53, 0x5F, 0x30, 0x31, 0x34, 0x2E, 0x39, 0x34, 0x3B, 0x31 }; // SCES_014.94;1
+const unsigned char medievil_spain_ps_exe [] =   { 0x53, 0x43, 0x45, 0x53, 0x5F, 0x30, 0x31, 0x34, 0x2E, 0x39, 0x35, 0x3B, 0x31 }; // SCES_014.95;1
 
 const unsigned char libcrypt_2_anti_pro_action_replay[] = {
     0x80, 0xE1, 
@@ -181,6 +181,60 @@ const unsigned char anti_piracy_v2_pal_bypass[] = { // 16 byte pattern
     0x0A, 0x00, 0x62, 0x10 // change to 0x0A, 0x00, 0x00, 0x18 to make the game think your using a PAL BIOS/console
 };
 
+const unsigned char beatmania_append_gotta_mix_system_cnf[] = { // 66 byte pattern
+    0x42, 0x4F, 0x4F, 0x54,
+    0x20, 0x3D, 0x20, 0x63,
+    0x64, 0x72, 0x6F, 0x6D,
+    0x3A, 0x5C, 0x53, 0x4C,
+    0x50, 0x4D, 0x5F, 0x38,
+    0x36, 0x32, 0x2E, 0x32, 
+    0x39, 0x3B, 0x31, 0x0D,
+    0x0A, 0x54, 0x43, 0x42, 
+    0x20, 0x3D, 0x20, 0x34,
+    0x0D, 0x0A, 0x45, 0x56,
+    0x45, 0x4E, 0x54, 0x20,
+    0x3D, 0x20, 0x31, 0x30, 
+    0x0D, 0x0A, 0x53, 0x54,
+    0x41, 0x43, 0x4B, 0x20,
+    0x3D, 0x20, 0x38, 0x30,
+    0x31, 0x46, 0x46, 0x46,
+    0x30, 0x30
+};
+/*
+BOOT = cdrom:\SLPM_866.92;1
+TCB = 4
+EVENT = 10
+STACK = 801FFF00
+*/
+
+const unsigned char beatmania_append_3rd_mix_system_cnf[] = { // 66 byte pattern
+    0x42, 0x4F, 0x4F, 0x54,
+    0x20, 0x3D, 0x20, 0x63, 
+    0x64, 0x72, 0x6F, 0x6D,
+    0x3A, 0x5C, 0x53, 0x4C,
+    0x50, 0x4D, 0x5F, 0x38, 
+    0x36, 0x31, 0x2E, 0x38,
+    0x34, 0x3B, 0x31, 0x0D,
+    0x0A, 0x54, 0x43, 0x42,
+    0x20, 0x3D, 0x20, 0x34,
+    0x0D, 0x0A, 0x45, 0x56,
+    0x45, 0x4E, 0x54, 0x20,
+    0x3D, 0x20, 0x31, 0x30, 
+    0x0D, 0x0A, 0x53, 0x54,
+    0x41, 0x43, 0x4B, 0x20,
+    0x3D, 0x20, 0x38, 0x30,
+    0x31, 0x46, 0x46, 0x46,
+    0x30, 0x30
+};
+/*
+BOOT = cdrom:\SLPM_861.84;1
+TCB = 4
+EVENT = 10
+STACK = 801FFF00
+*/
+
+const unsigned char append_exe_name[] = { 0x5C, 0x41, 0x50, 0x50, 0x45, 0x4E, 0x44, 0x2E, 0x45, 0x58, 0x45,  }; // \APPEND.EXE
+
 bool matched_anti_piracy_v1;
 bool matched_anti_piracy_v2_pal_bypass;
 
@@ -244,6 +298,7 @@ void bin_patch_libcrypt(const char **argv)
     printf("Scanning %d sectors, please wait...\n", number_of_sectors);
 
     libcrypt_2 = true;
+
     while(1)
     {
         if(current_fpos > max_size)
@@ -492,6 +547,9 @@ void bin_patch_libcrypt(const char **argv)
 
 void bin_patch(const char **argv)
 {
+    bool is_beatmania_append_gotta_mix = false;
+    bool is_beatmania_append_3rd_mix = false;
+
     /*
         The AP table could possibly start on the end of a sector and end at the beginning of the next sector. Each RAW sector is 0x930 bytes. The first 0x18 bytes are to be ignored as they are just header data. The next 0x800 bytes contains actual data we want to scan through.
         Start at 0. Skip to 0x18. Read the next 0x800 bytes. Skip to a total of 0x930 bytes (one whole raw sector). Skip 0x18 bytes again and then read the next 0x800 bytes. We now have 2 sectors worth of straight up data in a buffer of 0x1000 bytes
@@ -547,6 +605,80 @@ void bin_patch(const char **argv)
 
         for(int s = 0; s < search_size; s++)
         {
+            // Sector 23 is where no swap matches occur (which is within directory sectors maybe range)
+            if((directory_record_sectors_maybe) && (!is_beatmania_append_gotta_mix))
+            {
+                is_beatmania_append_gotta_mix = true;
+                
+                for(int i=0; i < 66; i++)
+                {
+                    if(beatmania_append_gotta_mix_system_cnf[i] != sectors[s + i])
+                    {
+                        is_beatmania_append_gotta_mix = false;
+                    }
+                }
+
+                if(is_beatmania_append_gotta_mix)
+                {
+                
+                    if(s < 0x800)
+                    {
+                        lba = ((current_fpos / 0x930) + 150);
+                    } else {
+                        lba = ((current_fpos / 0x930) + 151);
+                    }
+
+                    printf("Got Append No Swap Bypass match (By  mdmdj) at LBA: %u\n", lba);
+                    sectors[s + 14] = append_exe_name[0]; // /
+                    sectors[s + 15] = append_exe_name[1]; // A
+                    sectors[s + 16] = append_exe_name[2]; // P
+                    sectors[s + 17] = append_exe_name[3]; // P
+                    sectors[s + 18] = append_exe_name[4]; // E
+                    sectors[s + 19] = append_exe_name[5]; // N
+                    sectors[s + 20] = append_exe_name[6]; // D
+                    sectors[s + 21] = append_exe_name[7]; // .
+                    sectors[s + 22] = append_exe_name[8]; // E
+                    sectors[s + 23] = append_exe_name[9]; // X
+                    sectors[s + 24] = append_exe_name[10]; // E
+                }
+            }
+
+            if((directory_record_sectors_maybe) && (!is_beatmania_append_3rd_mix))
+            {
+                is_beatmania_append_3rd_mix = true;
+                
+                for(int i=0; i < 66; i++)
+                {
+                    if(beatmania_append_3rd_mix_system_cnf[i] != sectors[s + i])
+                    {
+                        is_beatmania_append_3rd_mix = false;
+                    }
+                }
+
+                if(is_beatmania_append_3rd_mix)
+                {
+                
+                    if(s < 0x800)
+                    {
+                        lba = ((current_fpos / 0x930) + 150);
+                    } else {
+                        lba = ((current_fpos / 0x930) + 151);
+                    }
+
+                    printf("Got Append.exe bypass match (By  mdmdj) at LBA: %u\n", lba);
+                    sectors[s + 14] = append_exe_name[0]; // /
+                    sectors[s + 15] = append_exe_name[1]; // A
+                    sectors[s + 16] = append_exe_name[2]; // P
+                    sectors[s + 17] = append_exe_name[3]; // P
+                    sectors[s + 18] = append_exe_name[4]; // E
+                    sectors[s + 19] = append_exe_name[5]; // N
+                    sectors[s + 20] = append_exe_name[6]; // D
+                    sectors[s + 21] = append_exe_name[7]; // .
+                    sectors[s + 22] = append_exe_name[8]; // E
+                    sectors[s + 23] = append_exe_name[9]; // X
+                    sectors[s + 24] = append_exe_name[10]; // E
+                }
+            }
 
             matched_anti_piracy_v1 = true;
             for(int i=0; i < 40; i++)

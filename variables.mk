@@ -1,7 +1,7 @@
 # Variables for EzRe Makefile
 
 # Basename of all release files (.zip, .deb)
-RELEASE_BASE_NAME=anti-piracy-ripper
+RELEASE_BASE_NAME=aprip
 # Version number, passed as 'VERSION' string to $(SOURCE_FILES)
 VERSION=v1.0.7
 # Appeneded to end of release file name

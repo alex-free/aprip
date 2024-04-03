@@ -33,21 +33,29 @@ It is used as a development aid for the Tonyhax International [anti-piracy bypas
 
 ## Downloads
 
-### Version 1.0.6 (11/6/2023)
-
-*	[aprip-v1.0.6-windows-x86](https://github.com/alex-free/aprip/releases/download/v1.0.6/aprip-v1.0.6-windows-x86.zip) _For Windows 95 OSR 2.5 Or Newer (32-bit Windows)_
-*	[aprip-v1.0.6-windows-x86\_64](https://github.com/alex-free/aprip/releases/download/v1.0.6/aprip-v1.0.6-windows-x86_64.zip) _For 64-bit Windows_
-*	[aprip-v1.0.6-linux-x86](https://github.com/alex-free/aprip/releases/download/v1.0.6/aprip-v1.0.6-linux-x86_static.zip) _For x86 Linux Distros_
-*	[aprip-v1.0.6-linux-x86\_64](https://github.com/alex-free/aprip/releases/download/v1.0.6/aprip-v1.0.6-linux-x86_64_static.zip) _For x86\_64 Linux Distros_
-*	[aprip-1.0.6-source](https://github.com/alex-free/aprip/archive/refs/tags/v1.0.6.zip)
+### Version 1.0.7 (4/2/2024)
 
 Changes:
 
-*	Added support for my Zero APv1 bypass for GameShark code generation and CD image BIN file patching.
+*   Implemented Append No Swap Bypass (By  mdmdj) for disc image patcher mode. This only currently supports the [Append Discs](https://remywiki.com/APPEND_DISC) [Beat Mania Append GottaMix](http://redump.org/disc/3550/) and [Beat Mania Append 3rdMix](http://redump.org/disc/2306/), allowing them to work without a [Key Disc](https://remywiki.com/KEY_DISC).
 
-*   Added support for the Fake PAL APv2 bypass for GameShark code generation and CD image BIN file patching.
+*   Implemented my new [EzRe](https://github.com/alex-free/ezre) build system.
 
-*	Added support for B.A.D's LibCrypt v2 bypass for GameShark code generation and CD image BIN file patching.
+----------------------------------------------------
+
+*	[aprip-v1.0.7-windows-i686-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.7/aprip-v1.0.7-windows-i686-static.zip) _Portable Release For Windows 95 OSR 2.5 and above, Pentium CPU minimum (32 bit)_
+
+*	[aprip-v1.0.7-windows-x86\_64-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.7/aprip-v1.0.7-windows-x86_64-static.zip) _Portable Release For x86_64 Windows (64 bit)_
+
+*	[aprip-v1.0.7-linux-i386-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.7/aprip-v1.0.7-linux-i386-static.zip) _Portable Release For Linux 3.2.0 and above, 386 CPU minimum (32 bit)_
+
+*	[aprip-v1.0.7-linux-i386-static.deb](https://github.com/alex-free/aprip/releases/download/v1.0.7/aprip-v1.0.7-linux-i386-static.deb) _Deb package file For Linux 3.2.0 and above, 386 CPU minimum (32 bit)_
+
+*	[aprip-v1.0.7-linux-x86\_64-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.7/aprip-v1.0.7-linux-x86_64-static.zip) _Portable Release For x86\_64 Linux 3.2.0 and above (64 bit)_
+
+*	[aprip-v1.0.7-linux-x86\_64-static.deb](https://github.com/alex-free/aprip/releases/download/v1.0.7/aprip-v1.0.7-linux-x86_64-static.deb) _Deb package file for x86_64 Linux 3.2.0 and above (64 bit)_
+
+---------------------------------------
 
 [About Previous Versions](changelog.md).
 
@@ -123,13 +131,13 @@ CD image is slow as it has to scan the entire file for the various protections. 
 
 The first thing to do is to rip and or acquire a CD image of your desired game using any CD ripping software of your choice. Then depending on what protection the game requires, follow the instructions below for either APv2 or LibCrypt v1/LibCrypt v2.
 
-### For APv1 or APv2
+### For APv1 or APv2, Or No-Swap
 
 *	On Linux, execute `./aprip -b <track 01.bin>` in your Terminal. On Windows, execute  `aprip.exe -b <track 01.bin>` in `cmd.exe`/Windows Terminal. 
 
 Replace `<track 01.bin>` with the actual first or only track of the cd image ripped from the game you want to patch_.
 
-Make sure you get at least one match for the [Zero Bypass](#zero-bypass), the [Fake VC0 Bypass](#fake-vc0), or the [Fake PAL Bypass](#fake-pal-bypass). If you didn't get any match then aprip can't patch the disc image of the game. It might be able to generate [GameShark codes](#generating-gameshark-codes) however.
+Make sure you get at least one match for the [Append No Swap Bypass](#append-no-swap-bypass), the [Zero Bypass](#zero-bypass), the [Fake VC0 Bypass](#fake-vc0), or the [Fake PAL Bypass](#fake-pal-bypass). If you didn't get any match then aprip can't patch the disc image of the game. It might be able to generate [GameShark codes](#generating-gameshark-codes) however.
 
 ![Ape Escape Europe Disc Image Patched](images/ape-escape-europe-disc-image-patched.png)
 
@@ -298,6 +306,10 @@ If you see `Got LibCrypt v1 bypass match (By ICEPICK)`  then you have some PAL r
 
 If you see `Got LibCrypt v2 bypass match (By B.A.D)`  then you have some a PAL game containing LibCrypt v2 protection, which is the most common version of LibCrypt. This bypass allows the game to be burned with any standard CD burning software using just the cue file. It also allows for use with non-stealth mod-chip consoles. This bypass should have quite high compatibility if the game is LibCrypt v2.
 
+### Append No Swap Bypass
+
+If you see `Append No Swap Bypass match (By  mdmdj)` then you have either [Beat Mania Append GottaMix](http://redump.org/disc/3550/) or [Beat Mania Append 3rdMix](http://redump.org/disc/2306/). Under normal circumstances, you must first use a Beat Mania [Key Disc](https://remywiki.com/KEY_DISC) to boot these [Append Discs](https://remywiki.com/APPEND_DISC). After this patch, the games will work standalone when booted directly, instead of displaying a message to insert a key disc first.
+
 ## How It Works
 
 ### APv1 Zero Bypass
@@ -323,6 +335,10 @@ I found the [TRSIMEDI patcher by ICEPICK](https://consolecopyworld.com/psx/psx_m
 ### LibCrypt v2 B.A.D Bypass
 
 I was able to automate the hex editing guide written at the [LibCrypt PS1 Protection Bible By Red-J](https://red-j.github.io/Libcrypt-PS1-Protection-bible/index.htm).
+
+### Append No Swap Bypass
+
+[Mdmdj](https://github.com/alex-free/aprip/issues/1) pointed out that for the Beat Mania 3 engine-based [Append Discs](https://remywiki.com/APPEND_DISC) [Beat Mania Append GottaMix](http://redump.org/disc/3550/) and [Beat Mania Append 3rdMix](http://redump.org/disc/2306/) you can edit `SYSTEM.CNF` to boot the `APPEND.EXE` file directly in order to remove the limitation.
 
 ## License
 

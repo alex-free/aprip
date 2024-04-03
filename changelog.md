@@ -1,5 +1,22 @@
 # Changelog
 
+
+## Version 1.0.6 (11/6/2023)
+
+*	[aprip-v1.0.6-windows-x86](https://github.com/alex-free/aprip/releases/download/v1.0.6/aprip-v1.0.6-windows-x86.zip) _For Windows 95 OSR 2.5 Or Newer (32-bit Windows)_
+*	[aprip-v1.0.6-windows-x86\_64](https://github.com/alex-free/aprip/releases/download/v1.0.6/aprip-v1.0.6-windows-x86_64.zip) _For 64-bit Windows_
+*	[aprip-v1.0.6-linux-x86](https://github.com/alex-free/aprip/releases/download/v1.0.6/aprip-v1.0.6-linux-x86_static.zip) _For x86 Linux Distros_
+*	[aprip-v1.0.6-linux-x86\_64](https://github.com/alex-free/aprip/releases/download/v1.0.6/aprip-v1.0.6-linux-x86_64_static.zip) _For x86\_64 Linux Distros_
+*	[aprip-1.0.6-source](https://github.com/alex-free/aprip/archive/refs/tags/v1.0.6.zip)
+
+Changes:
+
+*	Added support for my Zero APv1 bypass for GameShark code generation and CD image BIN file patching.
+
+*   Added support for the Fake PAL APv2 bypass for GameShark code generation and CD image BIN file patching.
+
+*	Added support for B.A.D's LibCrypt v2 bypass for GameShark code generation and CD image BIN file patching.
+
 ## Version 1.0.5 (6/26/2023)
 
 *	[aprip-1.0.5-windows\_x86](https://github.com/alex-free/aprip/releases/download/v1.0.5/aprip-1.0.5-windows_x86.zip) _For Windows 95 OSR 2.5 Or Newer (32-bit Windows)_
