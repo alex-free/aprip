@@ -30,22 +30,28 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 
 FILE *bin;
+FILE *bin_2;
 FILE *mem_dump_1;
 FILE *mem_dump_2;
+FILE *patch;
 
 unsigned int bin_size;
+unsigned int bin_size_2;
 unsigned int lba;
 unsigned int max_size;
 unsigned int mem_dump_1_size; 
 unsigned int mem_dump_2_size;
 unsigned int current_fpos;
 unsigned int number_of_sectors;
+unsigned int number_of_sectors_2;
 unsigned int search_size;
 unsigned int valid_mem_dump_size = 0x200000; // The exact file size generated when dumping RAM in the DuckStation emulator.
 unsigned int gameshark_write_byte_address;
 unsigned int get_start_of_pattern_pos;
 unsigned int magic_word;
+
 unsigned char *buf;
+unsigned char *buf_2;
 unsigned char *bytes;
 unsigned char *mem_dump_1_buf;
 unsigned char *mem_dump_2_buf;
@@ -53,6 +59,7 @@ unsigned char *mem_dump_2_buf;
 unsigned char last_byte;
 unsigned char gameshark_prefix;
 unsigned char sectors[0x1000];
+unsigned char sectors_2[0x1000];
 
 const unsigned char sync = 0x00;
 
@@ -254,6 +261,144 @@ bool matched_libcrypt_1_icepick_based_patch;
 bool matched_libcrypt_1_magic_word;
 bool matched_libcrypt_1_part_2;
 bool matched_libcrypt_1_part_3;
+
+void bin_patch_custom(const char **argv)
+{
+    /*
+        The patch could possibly start on the end of a sector and end at the beginning of the next sector. Each RAW sector is 0x930 bytes. The first 0x18 bytes are to be ignored as they are just header data. The next 0x800 bytes contains actual data we want to scan through.
+        Start at 0. Skip to 0x18. Read the next 0x800 bytes. Skip to a total of 0x930 bytes (one whole raw sector). Skip 0x18 bytes again and then read the next 0x800 bytes. We now have 2 sectors worth of straight up data in a buffer of 0x1000 bytes
+        Run search functions on the 0x1000 byte sized buffer.
+    */
+    fseek(bin, 0, SEEK_END);
+    bin_size = ftell(bin);
+
+    if(bin_size > 0x2EE00000) // 750MB max, no PSX software comes even close to such a size
+    {
+        printf("Error: The CD image BIN file %s exceeds the maximum filesize of 750MB\n", argv[2]);
+        fclose(bin);
+        return;
+    }
+    
+    fseek(bin, 0, SEEK_SET);
+    buf = (unsigned char *)malloc(bin_size * sizeof(unsigned char)); // Read entire BIN to memory for performance gain, I mean it's 2022 who doesn't have a free ~700MBs of RAM?!
+    
+    if(fread(buf, 1, bin_size, bin) != bin_size)
+    {
+        printf("Error loading CD image BIN file: %s\n", argv[2]);
+        return;
+    }
+
+    printf("Successfully loaded CD image BIN file: %s (%d bytes in memory)\n", argv[2], bin_size);
+    max_size = bin_size;
+    number_of_sectors = (bin_size / 2352);
+
+    int line_count = 0;
+    char ch;
+        fseek(patch, 0, SEEK_SET);
+
+    // Count the number of newline characters in the file
+    while ((ch = fgetc(patch)) != EOF) {
+        if (ch == '\n') {
+            line_count++;
+        }
+    }
+    printf("Line count: %d\n", line_count);
+    fseek(patch, 0, SEEK_SET);
+    unsigned char custom_patch_before[line_count];
+    unsigned char custom_patch_after[line_count];
+    bool custom_patch_match;
+    int i = 0;
+    while(fscanf(patch, "%hhX %hhX%*[^\n]", &custom_patch_before[i], &custom_patch_after[i]) == 2)
+    {
+        printf("%hhX %hhX\n", custom_patch_before[i], custom_patch_after[i]);
+        i++;
+    }
+
+    //return;
+
+
+
+    printf("Scanning %d sectors, please wait...\n", number_of_sectors);
+
+    while(1)
+    {
+        if(current_fpos > max_size)
+            break; // even number of sectors, done reading the file.
+
+        if((current_fpos + 0x930) == max_size) // odd number of sectors
+            last_sector = 1; // This function is reading 2 sectors at a time, so if there is an odd number of sectors we have to change the behavior to only search the last sector. Explicitly break loop when this is set.
+
+        for(int i=0; i < 0x800; i++)
+        {
+            sectors[i] = buf[current_fpos + i + 0x18]; // skip 0x18 header info per sector
+        }
+
+        if(!last_sector)
+        {
+            for(int i=0; i < 0x800; i++)
+            {
+                sectors[i + 0x800] = buf[current_fpos + i + 0x18 + 0x930]; // skip 0x18 header info then skip exactly 1 sector. Read the next 0x800 bytes. We now have an array's worth of data from 2 sectors which excludes EDC/Header data at the beginning and end of each.
+            }
+            search_size = 0x1000;
+        } else {
+            search_size = 0x800;
+        }
+
+        for(int s = 0; s < search_size; s++)
+        {
+            
+            custom_patch_match = true;
+            for(int i=0; i < line_count; i++)
+            {                
+                if((custom_patch_before[i] != sectors[s + i]) && (custom_patch_before[i] + custom_patch_after[i] != 0))
+                {
+                    custom_patch_match = false; 
+                }
+            }
+
+            if(custom_patch_match) 
+            {        
+                if(s < 0x800)
+                {
+                    lba = ((current_fpos / 0x930) + 150);
+                } else {
+                    lba = ((current_fpos / 0x930) + 151);
+                }    
+                printf("Got custom match at LBA: %u\n", lba);
+
+                for(int i = 0; i < line_count; i++)
+                {
+                    if(custom_patch_before[i] + custom_patch_after[i] != 0)
+                    {
+                        printf("Writing %hhX\n", custom_patch_after[i]);
+                        sectors[s + i] = custom_patch_after[i];
+                    }
+                }
+            }
+        }
+		
+        for(int i=0; i < 0x800; i++)
+        {
+            buf[current_fpos + i + 0x18] = sectors[i]; // skip 0x18 header info per sector
+        }
+
+        if(!last_sector)
+        {
+            for(int i=0; i < 0x800; i++)
+            {
+                buf[current_fpos + i + 0x18 + 0x930] = sectors[0x800 + i]; // skip 0x18 header info then skip exactly 1 sector. Read the next 0x800 bytes. We now have an array's worth of data from 2 sectors which excludes EDC/Header data at the beginning and end of each.
+            }
+        } else {
+            break; // That was the last sector
+        }			
+        current_fpos = (current_fpos + 0x930); // Advance one sector.
+    }
+
+    fseek(bin, 0, SEEK_SET);
+	fwrite(buf, bin_size, 1, bin);
+    fclose(bin);
+    free(buf);
+}
 
 void bin_patch_libcrypt(const char **argv)
 {
@@ -1478,6 +1623,150 @@ void sharkconv(const char **argv)
     free(mem_dump_2_buf);
 }
 
+void sector_diff(const char **argv, int argc)
+{
+
+// bin 1
+    fseek(bin, 0, SEEK_END);
+    bin_size = ftell(bin);
+
+    if(bin_size > 0x2EE00000) // 750MB max, no PSX software comes even close to such a size
+    {
+        printf("Error: BIN file 1: %s exceeds the maximum filesize of 750MB in bin patch mode\n", argv[2]);
+        fclose(bin);
+        return;
+    }
+
+    fseek(bin, 0, SEEK_SET);
+    buf = (unsigned char *)malloc(bin_size * sizeof(unsigned char)); // Read entire BIN to memory for performance gain, I mean it's 2022 who doesn't have a free ~700MBs of RAM?!
+
+    if(fread(buf, 1, bin_size, bin) != bin_size)
+    {
+        printf("Error loading BIN file 1: %s\n", argv[2]);
+        return;
+    }
+
+    printf("Successfully loaded BIN file 1: %s (%d bytes in memory)\n", argv[2], bin_size);
+    //max_size = bin_size;
+    number_of_sectors = (bin_size / 2352);
+
+// bin 2
+    fseek(bin_2, 0, SEEK_END);
+    bin_size_2 = ftell(bin_2);
+
+    if(bin_size_2 > 0x2EE00000) // 750MB max, no PSX software comes even close to such a size
+    {
+        printf("Error: The BIN file 2: %s exceeds the maximum filesize of 750MB in bin patch mode\n", argv[3]);
+        fclose(bin_2);
+        return;
+    }
+
+    fseek(bin_2, 0, SEEK_SET);
+    buf_2 = (unsigned char *)malloc(bin_size_2 * sizeof(unsigned char)); // Read entire BIN to memory for performance gain, I mean it's 2022 who doesn't have a free ~700MBs of RAM?!
+
+    if(fread(buf_2, 1, bin_size_2, bin_2) != bin_size_2)
+    {
+        printf("Error loading BIN file 2: %s\n", argv[3]);
+        return;
+    }
+
+    printf("Successfully loaded BIN file 2: %s (%d bytes in memory)\n", argv[3], bin_size_2);
+    number_of_sectors_2 = (bin_size_2 / 2352);
+
+    // sanity checks
+    if(bin_size != bin_size_2)
+    {
+        printf("Info: size difference:\n%s : %d bytes (%d sectors)\n%s : %d bytes (%d sectors)\n", argv[2], bin_size, number_of_sectors, argv[3], bin_size_2, number_of_sectors_2);
+        if(bin_size > bin_size_2)
+        {
+            max_size = bin_size_2;
+        } else {
+            max_size = bin_size; 
+        }
+    } else {
+        printf("\nInfo: %s and %s are both %d bytes (%d sectors)\n", argv[2], argv[3], bin_size, number_of_sectors);
+        max_size = bin_size;
+    }
+
+    printf("\nScanning %d sectors, please wait...\n", number_of_sectors);
+    current_fpos = 0;
+    while(1)
+    {
+        if(current_fpos > max_size)
+            break; // even number of sectors, done reading the file.
+
+        if((current_fpos + 0x930) == max_size) // odd number of sectors
+            last_sector = 1; // This function is reading 2 sectors at a time, so if there is an odd number of sectors we have to change the behavior to only search the last sector. Explicitly break loop when this is set.
+
+// load bin 1 sector user data
+        for(int i=0; i < 0x800; i++)
+        {
+            sectors[i] = buf[current_fpos + i + 0x18]; // skip 0x18 header info per sector
+        }
+
+// load bin 2 sector user data
+        for(int i=0; i < 0x800; i++)
+        {
+            sectors_2[i] = buf_2[current_fpos + i + 0x18]; // skip 0x18 header info per sector
+        }
+
+        search_size = 0x800;
+
+unsigned int previous_address = 0;
+// compare sector user data
+        for(int s = 0; s < search_size; s++)
+        {
+            if(sectors[s] != sectors_2[s])
+            {
+                if(find_first_different_byte)
+                {
+                    printf("\n----------------------------\n| Offset | File 1 | File 2 |\n----------------------------\n");
+                    find_first_different_byte = false;
+                }
+
+                //printf("Prev: %08X\n", previous_address);
+                
+                while ((previous_address != 0) && (previous_address != (current_fpos + s + 0x18 - 1)) && (previous_address < (current_fpos + s + 0x18)))
+                {
+                    previous_address++;
+                    printf("0x%08X 0x00 0x00\n", previous_address); // gen skip in array
+                    if(argc == 5)
+                    {
+                        //fprintf(patch, "%08X 00 00\n", previous_address);
+                        fprintf(patch, "00 00\n");
+                    }
+                }
+                previous_address = (current_fpos + s + 0x18);
+                printf("0x%08X 0x%02X 0x%02X\n", (current_fpos + s + 0x18), sectors[s], sectors_2[s]);
+
+                if(argc == 5)
+                {
+                    //fprintf(patch, "%08X %02X %02X\n", (current_fpos + s + 0x18), sectors[s], sectors_2[s]);
+                    fprintf(patch, "%02X %02X\n", sectors[s], sectors_2[s]);
+                }
+            }
+        }
+
+        if(last_sector)
+        {
+            break; // That was the last sector
+        }			
+
+        current_fpos = (current_fpos + 0x930); // Advance one sector.
+    }
+
+
+    if(argc == 5)
+    {
+        fclose(patch);
+    }
+
+    fclose(bin);
+    fclose(bin_2);
+    free(buf);
+    free(buf_2);
+}
+
 int main (int argc, const char * argv[]) 
 {
     printf("APrip %s By Alex Free (C)2022-2024 (3-BSD)\nhttps://alex-free.github.io/aprip\n\n", VERSION);
@@ -1485,7 +1774,7 @@ int main (int argc, const char * argv[])
     if(argc == 3)
     {
         if((strcmp("-b", argv[1])) == 0) {
-            printf("Mode: CD image BIN patcher for APv1 or APv2\n");
+            printf("Mode: CD image BIN patcher for APv1 or APv2\n\n");
             if((bin = fopen(argv[2], "rb+")) != NULL)
             {
                 bin_patch(argv);
@@ -1494,7 +1783,7 @@ int main (int argc, const char * argv[])
         	   return(1);
             }
         } else if((strcmp("-gs", argv[1])) == 0) {
-            printf("Mode: GameShark code generation for APv1 or APv2\n");
+            printf("Mode: GameShark code generation for APv1 or APv2\n\n");
             if((mem_dump_1 = fopen(argv[2], "rb")) != NULL)
             {
                 gameshark_gen(argv);
@@ -1508,7 +1797,7 @@ int main (int argc, const char * argv[])
         }
     } else if (argc == 4) {
         if((strcmp("-b", argv[1])) == 0) {
-            printf("Mode: CD image BIN patcher for LibCrypt v1 or LibCrypt v2\n");
+            printf("Mode: CD image BIN patcher for LibCrypt v1 or LibCrypt v2\n\n");
             if((bin = fopen(argv[3], "rb+")) != NULL)
             {
                 bin_patch_libcrypt(argv);
@@ -1516,8 +1805,37 @@ int main (int argc, const char * argv[])
                 printf("Error: Cannot open the BIN file: %s\n", argv[3]);
         	   return(1);
             }
+        } else if((strcmp("-d", argv[1])) == 0) {
+            printf("Mode: Sector user data compare\n\n");
+            if((bin = fopen(argv[2], "rb")) == NULL)
+            {
+                printf("Error: Cannot open bin file 1: %s\n", argv[2]);
+        	    return(1);
+            }
+            if((bin_2 = fopen(argv[3], "rb")) == NULL)
+            {
+                printf("Error: Cannot open bin file 2: %s\n", argv[3]);
+        	    return(1);
+            } else {
+                sector_diff(argv, argc);
+            }
+
+        } else if((strcmp("-p", argv[1])) == 0) {
+            printf("Mode: Sector user data compare patch applicator\n\n");
+            if((bin = fopen(argv[2], "rb+")) == NULL)
+            {
+                printf("Error: Cannot open bin file: %s\n", argv[2]);
+        	    return(1);
+            }
+            if((patch = fopen(argv[3], "r")) == NULL)
+            {
+                printf("Error: Cannot open patch file: %s\n", argv[3]);
+        	    return(1);
+            } else {
+                bin_patch_custom(argv);
+            }
         } else if((strcmp("-gs", argv[1])) == 0) {
-            printf("Mode: GameShark code generation for LibCrypt v1 or LibCrypt v2\n");
+            printf("Mode: GameShark code generation for LibCrypt v1 or LibCrypt v2\n\n");
             libcrypt = true;
             magic_word = strtoul(argv[3], NULL, 16);
             printf("Magic Word: %08X\n", magic_word);
@@ -1537,6 +1855,27 @@ int main (int argc, const char * argv[])
                 return(1);
             }
         }
+    } else if (argc == 5) {
+        if((strcmp("-d", argv[1])) == 0) {
+            printf("Mode: Sector user data compare with patch generation\n\n");
+            if((bin = fopen(argv[2], "rb")) == NULL)
+            {
+                printf("Error: Cannot open bin file 1: %s\n", argv[2]);
+        	    return(1);
+            }
+            if((bin_2 = fopen(argv[3], "rb")) == NULL)
+            {
+                printf("Error: Cannot open bin file 2: %s\n", argv[3]);
+        	    return(1);
+            }
+            if((patch = fopen(argv[4], "wb+")) == NULL)
+            {
+                printf("Error: Cannot open patch file: %s\n", argv[4]);
+        	    return(1);
+            } else {
+                sector_diff(argv, argc);
+            }
+        }
     } else if (argc == 6) {
         printf("Mode: GameShark code converter\n");
         sharkconv(argv);
@@ -1549,6 +1888,16 @@ int main (int argc, const char * argv[])
 
         "Patch CD BIN file containg LibCrypt v1 or LibCrypt v2 protection:\n"
         "aprip -b <magic word> <bin file>\n\n"
+
+        "Compare sector user data of 2 CD BIN files\n"
+        "aprip -d <bin file 1> <bin file 2>\n\n"
+
+        "Compare sector user data of 2 CD BIN files and generate aprip-style patch\n"
+        "aprip -d <bin file 1> <bin file 2> <patch file>\n\n"
+
+        "Patch sector user data of a CD BIN file with an aprip-style patch\n"
+        "aprip -p <bin file 1> <patch file>\n\n"
+
         "*****RAM Dump Features*****\n\n"        
         "Create gameshark codes to bypass APv1 or APv2 protection:\n"
         "aprip -gs <DuckStation memory dump, taken at time of protection execution>\n\n"

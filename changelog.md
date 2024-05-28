@@ -1,5 +1,28 @@
 # Changelog
 
+## Version 1.0.7 (4/2/2024)
+
+Changes:
+
+*   Implemented Append No Swap Bypass (By  mdmdj) for disc image patcher mode. This only currently supports the [Append Discs](https://remywiki.com/APPEND_DISC) [Beat Mania Append GottaMix](http://redump.org/disc/3550/) and [Beat Mania Append 3rdMix](http://redump.org/disc/2306/), allowing them to work without a [Key Disc](https://remywiki.com/KEY_DISC).
+
+*   Implemented my new [EzRe](https://github.com/alex-free/ezre) build system.
+
+----------------------------------------------------
+
+*	[aprip-v1.0.7-windows-i686-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.7/aprip-v1.0.7-windows-i686-static.zip) _Portable Release For Windows 95 OSR 2.5 and above, Pentium CPU minimum (32 bit)_
+
+*	[aprip-v1.0.7-windows-x86\_64-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.7/aprip-v1.0.7-windows-x86_64-static.zip) _Portable Release For x86_64 Windows (64 bit)_
+
+*	[aprip-v1.0.7-linux-i386-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.7/aprip-v1.0.7-linux-i386-static.zip) _Portable Release For Linux 3.2.0 and above, 386 CPU minimum (32 bit)_
+
+*	[aprip-v1.0.7-linux-i386-static.deb](https://github.com/alex-free/aprip/releases/download/v1.0.7/aprip-v1.0.7-linux-i386-static.deb) _Deb package file For Linux 3.2.0 and above, 386 CPU minimum (32 bit)_
+
+*	[aprip-v1.0.7-linux-x86\_64-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.7/aprip-v1.0.7-linux-x86_64-static.zip) _Portable Release For x86\_64 Linux 3.2.0 and above (64 bit)_
+
+*	[aprip-v1.0.7-linux-x86\_64-static.deb](https://github.com/alex-free/aprip/releases/download/v1.0.7/aprip-v1.0.7-linux-x86_64-static.deb) _Deb package file for x86_64 Linux 3.2.0 and above (64 bit)_
+
+---------------------------------------
 
 ## Version 1.0.6 (11/6/2023)
 

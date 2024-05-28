@@ -13,6 +13,8 @@ It is used as a development aid for the Tonyhax International [anti-piracy bypas
 *   [Patching The CD Image](#patching-the-cd-image)
 *   [Generating GameShark Codes](#generating-gameshark-codes)
 *   [Converting An Existing GameShark Codes](#converting-an-existing-gameshark-code).
+*   [Comparing CD Images](#comparing-cd-images).
+*   [Creating APrip-Style Patches](#creating-aprip-style-patches).
 *   [Soft-Mods](#soft-mod)
 *   [How It Works](#how-it-works)
 *   [License](#license)
@@ -31,27 +33,27 @@ It is used as a development aid for the Tonyhax International [anti-piracy bypas
 
 ## Downloads
 
-### Version 1.0.7 (4/2/2024)
+### Version 1.0.8 (5/28/2024)
 
 Changes:
 
-*   Implemented Append No Swap Bypass (By  mdmdj) for disc image patcher mode. This only currently supports the [Append Discs](https://remywiki.com/APPEND_DISC) [Beat Mania Append GottaMix](http://redump.org/disc/3550/) and [Beat Mania Append 3rdMix](http://redump.org/disc/2306/), allowing them to work without a [Key Disc](https://remywiki.com/KEY_DISC).
+*   Implemented [sector user data compare function](#comparing-cd-images). This allows you to display only differences in user data (and not ECC/EDC) between i.e. an unmodified disc image vs a patched one.
 
-*   Implemented my new [EzRe](https://github.com/alex-free/ezre) build system.
+*    Implemented [Aprip-style patch creation/applicator functions](#creating-aprip-style-patches). An APrip-style patch searches all sector user data for a pattern of bytes and then patches specific bytes in the pattern (pre-defined in the patch) without using known offsets. It can be used to 'port' patch methods.
 
 ----------------------------------------------------
 
-*	[aprip-v1.0.7-windows-i686-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.7/aprip-v1.0.7-windows-i686-static.zip) _Portable Release For Windows 95 OSR 2.5 and above, Pentium CPU minimum (32 bit)_
+*	[aprip-v1.0.8-windows-i686-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.8/aprip-v1.0.8-windows-i686-static.zip) _Portable Release For Windows 95 OSR 2.5 and above, Pentium CPU minimum (32 bit)_
 
-*	[aprip-v1.0.7-windows-x86\_64-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.7/aprip-v1.0.7-windows-x86_64-static.zip) _Portable Release For x86_64 Windows (64 bit)_
+*	[aprip-v1.0.8-windows-x86\_64-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.8/aprip-v1.0.8-windows-x86_64-static.zip) _Portable Release For x86_64 Windows (64 bit)_
 
-*	[aprip-v1.0.7-linux-i386-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.7/aprip-v1.0.7-linux-i386-static.zip) _Portable Release For Linux 3.2.0 and above, 386 CPU minimum (32 bit)_
+*	[aprip-v1.0.8-linux-i386-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.8/aprip-v1.0.8-linux-i386-static.zip) _Portable Release For Linux 3.2.0 and above, 386 CPU minimum (32 bit)_
 
-*	[aprip-v1.0.7-linux-i386-static.deb](https://github.com/alex-free/aprip/releases/download/v1.0.7/aprip-v1.0.7-linux-i386-static.deb) _Deb package file For Linux 3.2.0 and above, 386 CPU minimum (32 bit)_
+*	[aprip-v1.0.8-linux-i386-static.deb](https://github.com/alex-free/aprip/releases/download/v1.0.8/aprip-v1.0.8-linux-i386-static.deb) _Deb package file For Linux 3.2.0 and above, 386 CPU minimum (32 bit)_
 
-*	[aprip-v1.0.7-linux-x86\_64-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.7/aprip-v1.0.7-linux-x86_64-static.zip) _Portable Release For x86\_64 Linux 3.2.0 and above (64 bit)_
+*	[aprip-v1.0.8-linux-x86\_64-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.8/aprip-v1.0.8-linux-x86_64-static.zip) _Portable Release For x86\_64 Linux 3.2.0 and above (64 bit)_
 
-*	[aprip-v1.0.7-linux-x86\_64-static.deb](https://github.com/alex-free/aprip/releases/download/v1.0.7/aprip-v1.0.7-linux-x86_64-static.deb) _Deb package file for x86_64 Linux 3.2.0 and above (64 bit)_
+*	[aprip-v1.0.8-linux-x86\_64-static.deb](https://github.com/alex-free/aprip/releases/download/v1.0.8/aprip-v1.0.8-linux-x86_64-static.deb) _Deb package file for x86_64 Linux 3.2.0 and above (64 bit)_
 
 ---------------------------------------
 
@@ -111,7 +113,7 @@ These PSX soft-mods are capable of correctly playing APrip [patched BIN+CUE CD i
 
 * [Tonyhax](https://orca.pet/tonyhax/)
 
-* [UniROM](https://unirom.github.io/)
+* [UniROM](https://unirom.github.io/) (NOT SCPH-1000 or early SCPH-3000).
 
 Out of the above, all except UniROM have anti-piracy bypass systems implemented for at least some games (and dare I say Tonyhax International's supported bypasses are [quite extensive](https://alex-free.github.io/tonyhax-international/anti-piracy-bypass.html#apv2-bypasses)). 
 
@@ -281,6 +283,22 @@ and were able to get a working code for Resident Evil 3 Japan Demo:
 `801800E2 1000`
 
 The following `80XXXXXX` `YYYY` line should be obvious to figure out from the original code.
+
+## Comparing CD Images
+
+You can find out how a patch works by comparing the differences between an unmodified disc image and the patched one. APrip makes this very easy with the sector user data compare mode. This mode only outputs bytes that differ found in the user data portion of sectors. By design it ignores EDC and ECC because these are already known to change if any bytes of the user data are different, and are _usually_ just noise in deciphering what a patch is actually doing.
+
+To use this feature, use aprip with 3 arguments. `-d <bin file 1> <bin file 2>`. Replace `<bin file 1>` with the original unmodified track 1 bin file of the game. Replace `bin file 2` with the patched track 1 bin file of the same game. You then get a very clear overview of what the patch is doing.
+
+## Creating APrip-Style Patches
+
+Building off of the above features, you can generate an aprip-style patch. An APrip-style patch searches all sector user data for a pattern of bytes and then patches specific bytes in the pattern (pre-defined in the patch) without using known offsets. It can be used to 'port' patch methods.
+
+To use this feature, first use aprip with 4 arguments. `-d <bin file 1> <bin file 2> <patch>`. Replace `<bin file 1>` with the original unmodified track 1 bin file of the game. Replace `bin file 2` with the patched track 1 bin file of the same game. Replace `<patch>` with the name of the patch file to be generated.
+
+Then use aprip with 3 arguments. `-p <bin file> <patch>`. Replace `<bin file>` with the unmodified disc image. Replace `<patch>` with the patch file previously generated.
+
+If your trying to port a LibCrypt patch, be aware that the magic word needs to be changed in the patch file for whatever other game your attempting to port the patch to.
 
 ## APrip Bypasses
 
