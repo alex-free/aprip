@@ -302,7 +302,17 @@ void bin_patch_custom(const char **argv)
             line_count++;
         }
     }
-    printf("Line count: %d\n", line_count);
+
+    // line count is equal to one byte change, so if it exceeds 0x800 * 2 = 0x10000 then it will segfault
+    if(line_count > 0x1000)
+    {
+        printf("\nGenerated patch is too large, it spans over 2 sectors (MAX is 0x1000 byte pattern/4096 lines). Please try splitting up the patch into seperate 2-sector length max patches.\n");
+        fclose(bin);
+        fclose(patch);
+        return;
+    } else {
+        printf("\nPatch size verified. Line count: %d\n", line_count);
+    }
     fseek(patch, 0, SEEK_SET);
     unsigned char custom_patch_before[line_count];
     unsigned char custom_patch_after[line_count];
@@ -313,10 +323,6 @@ void bin_patch_custom(const char **argv)
         printf("%hhX %hhX\n", custom_patch_before[i], custom_patch_after[i]);
         i++;
     }
-
-    //return;
-
-
 
     printf("Scanning %d sectors, please wait...\n", number_of_sectors);
 
@@ -1690,6 +1696,8 @@ void sector_diff(const char **argv, int argc)
 
     printf("\nScanning %d sectors, please wait...\n", number_of_sectors);
     current_fpos = 0;
+    unsigned int previous_address = 0;
+
     while(1)
     {
         if(current_fpos > max_size)
@@ -1712,7 +1720,6 @@ void sector_diff(const char **argv, int argc)
 
         search_size = 0x800;
 
-unsigned int previous_address = 0;
 // compare sector user data
         for(int s = 0; s < search_size; s++)
         {

@@ -1,4 +1,28 @@
-# Changelog
+# [Aprip](readme.md) -> Changelog
+
+## Version 1.0.8 (5/28/2024)
+
+Changes:
+
+*   Implemented [sector user data compare function](#comparing-cd-images). This allows you to display only differences in user data (and not ECC/EDC) between i.e. an unmodified disc image vs a patched one.
+
+*    Implemented [Aprip-style patch creation/applicator functions](#creating-aprip-style-patches). An APrip-style patch searches all sector user data for a pattern of bytes and then patches specific bytes in the pattern (pre-defined in the patch) without using known offsets. It can be used to 'port' patch methods.
+
+----------------------------------------------------
+
+*	[aprip-v1.0.8-windows-i686-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.8/aprip-v1.0.8-windows-i686-static.zip) _Portable Release For Windows 95 OSR 2.5 and above, Pentium CPU minimum (32 bit)_
+
+*	[aprip-v1.0.8-windows-x86\_64-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.8/aprip-v1.0.8-windows-x86_64-static.zip) _Portable Release For x86_64 Windows (64 bit)_
+
+*	[aprip-v1.0.8-linux-i386-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.8/aprip-v1.0.8-linux-i386-static.zip) _Portable Release For Linux 3.2.0 and above, 386 CPU minimum (32 bit)_
+
+*	[aprip-v1.0.8-linux-i386-static.deb](https://github.com/alex-free/aprip/releases/download/v1.0.8/aprip-v1.0.8-linux-i386-static.deb) _Deb package file For Linux 3.2.0 and above, 386 CPU minimum (32 bit)_
+
+*	[aprip-v1.0.8-linux-x86\_64-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.8/aprip-v1.0.8-linux-x86_64-static.zip) _Portable Release For x86\_64 Linux 3.2.0 and above (64 bit)_
+
+*	[aprip-v1.0.8-linux-x86\_64-static.deb](https://github.com/alex-free/aprip/releases/download/v1.0.8/aprip-v1.0.8-linux-x86_64-static.deb) _Deb package file for x86_64 Linux 3.2.0 and above (64 bit)_
+
+---------------------------------------
 
 ## Version 1.0.7 (4/2/2024)
 

@@ -3,7 +3,7 @@
 # Basename of all release files (.zip, .deb)
 RELEASE_BASE_NAME=aprip
 # Version number, passed as 'VERSION' string to $(SOURCE_FILES)
-VERSION=v1.0.8
+VERSION=v1.0.9
 # Appeneded to end of release file name
 LINUX_I386_RELEASE_NAME_SUFFIX=linux-i386-static
 LINUX_X86_64_RELEASE_NAME_SUFFIX=linux-x86_64-static

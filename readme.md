@@ -33,27 +33,25 @@ It is used as a development aid for the Tonyhax International [anti-piracy bypas
 
 ## Downloads
 
-### Version 1.0.8 (5/28/2024)
+### Version 1.0.9 (5/29/2024)
 
 Changes:
 
-*   Implemented [sector user data compare function](#comparing-cd-images). This allows you to display only differences in user data (and not ECC/EDC) between i.e. an unmodified disc image vs a patched one.
-
-*    Implemented [Aprip-style patch creation/applicator functions](#creating-aprip-style-patches). An APrip-style patch searches all sector user data for a pattern of bytes and then patches specific bytes in the pattern (pre-defined in the patch) without using known offsets. It can be used to 'port' patch methods.
+*    Add size limit verification and padding bug fix [Aprip-style patch creation/applicator functions](#creating-aprip-style-patches).
 
 ----------------------------------------------------
 
-*	[aprip-v1.0.8-windows-i686-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.8/aprip-v1.0.8-windows-i686-static.zip) _Portable Release For Windows 95 OSR 2.5 and above, Pentium CPU minimum (32 bit)_
+*	[aprip-v1.0.9-windows-i686-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.9/aprip-v1.0.9-windows-i686-static.zip) _Portable Release For Windows 95 OSR 2.5 and above, Pentium CPU minimum (32 bit)_
 
-*	[aprip-v1.0.8-windows-x86\_64-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.8/aprip-v1.0.8-windows-x86_64-static.zip) _Portable Release For x86_64 Windows (64 bit)_
+*	[aprip-v1.0.9-windows-x86\_64-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.9/aprip-v1.0.9-windows-x86_64-static.zip) _Portable Release For x86_64 Windows (64 bit)_
 
-*	[aprip-v1.0.8-linux-i386-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.8/aprip-v1.0.8-linux-i386-static.zip) _Portable Release For Linux 3.2.0 and above, 386 CPU minimum (32 bit)_
+*	[aprip-v1.0.9-linux-i386-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.9/aprip-v1.0.9-linux-i386-static.zip) _Portable Release For Linux 3.2.0 and above, 386 CPU minimum (32 bit)_
 
-*	[aprip-v1.0.8-linux-i386-static.deb](https://github.com/alex-free/aprip/releases/download/v1.0.8/aprip-v1.0.8-linux-i386-static.deb) _Deb package file For Linux 3.2.0 and above, 386 CPU minimum (32 bit)_
+*	[aprip-v1.0.9-linux-i386-static.deb](https://github.com/alex-free/aprip/releases/download/v1.0.9/aprip-v1.0.9-linux-i386-static.deb) _Deb package file For Linux 3.2.0 and above, 386 CPU minimum (32 bit)_
 
-*	[aprip-v1.0.8-linux-x86\_64-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.8/aprip-v1.0.8-linux-x86_64-static.zip) _Portable Release For x86\_64 Linux 3.2.0 and above (64 bit)_
+*	[aprip-v1.0.9-linux-x86\_64-static.zip](https://github.com/alex-free/aprip/releases/download/v1.0.9/aprip-v1.0.9-linux-x86_64-static.zip) _Portable Release For x86\_64 Linux 3.2.0 and above (64 bit)_
 
-*	[aprip-v1.0.8-linux-x86\_64-static.deb](https://github.com/alex-free/aprip/releases/download/v1.0.8/aprip-v1.0.8-linux-x86_64-static.deb) _Deb package file for x86_64 Linux 3.2.0 and above (64 bit)_
+*	[aprip-v1.0.9-linux-x86\_64-static.deb](https://github.com/alex-free/aprip/releases/download/v1.0.9/aprip-v1.0.9-linux-x86_64-static.deb) _Deb package file for x86_64 Linux 3.2.0 and above (64 bit)_
 
 ---------------------------------------
 
@@ -288,11 +286,11 @@ The following `80XXXXXX` `YYYY` line should be obvious to figure out from the or
 
 You can find out how a patch works by comparing the differences between an unmodified disc image and the patched one. APrip makes this very easy with the sector user data compare mode. This mode only outputs bytes that differ found in the user data portion of sectors. By design it ignores EDC and ECC because these are already known to change if any bytes of the user data are different, and are _usually_ just noise in deciphering what a patch is actually doing.
 
-To use this feature, use aprip with 3 arguments. `-d <bin file 1> <bin file 2>`. Replace `<bin file 1>` with the original unmodified track 1 bin file of the game. Replace `bin file 2` with the patched track 1 bin file of the same game. You then get a very clear overview of what the patch is doing.
+To use this feature, use aprip with 3 arguments. `-d <bin file 1> <bin file 2>`. Replace `<bin file 1>` with the original unmodified track 1 bin file of the game. Replace `<bin file 2>` with the patched track 1 bin file of the same game. You then get a very clear overview of what the patch is doing.
 
 ## Creating APrip-Style Patches
 
-Building off of the above features, you can generate an aprip-style patch. An APrip-style patch searches all sector user data for a pattern of bytes and then patches specific bytes in the pattern (pre-defined in the patch) without using known offsets. It can be used to 'port' patch methods.
+Building off of the above features, you can generate an aprip-style patch. An APrip-style patch searches all sector user data for a pattern of bytes (limit of 2 sector's user data (MAX is 0x1000 byte pattern/4096 lines) and then patches specific bytes in the pattern (pre-defined in the patch) without using known offsets. It can be used to 'port' patch methods.
 
 To use this feature, first use aprip with 4 arguments. `-d <bin file 1> <bin file 2> <patch>`. Replace `<bin file 1>` with the original unmodified track 1 bin file of the game. Replace `bin file 2` with the patched track 1 bin file of the same game. Replace `<patch>` with the name of the patch file to be generated.
 
